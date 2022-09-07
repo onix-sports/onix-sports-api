@@ -8,6 +8,7 @@ import StatisticsRepository from './statistics.repository';
 import _ from 'lodash';
 import { FakeStatisticsService } from './fake-statistics.service';
 import sortByScore from './helpers/sort-by-score.helper';
+import { LeaderboardEntity } from '@components/common/interfaces/leaderboard-entity.interface';
 
 @Injectable()
 export class StatisticsService {
@@ -92,7 +93,7 @@ export class StatisticsService {
     return chances;
   }
 
-  public async getLeaderboard(dateFrom?: Date, dateTo?: Date) {
+  public async getLeaderboard(dateFrom?: Date, dateTo?: Date): Promise<LeaderboardEntity[]> {
     let stats = await this.statisticRepository.getStatsPeriod([], dateFrom, dateTo);
     const fakeStats = await this.fakeStatisticService.getStats(stats.map(({ _id }) => new ObjectId(_id)));
 
