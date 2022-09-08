@@ -6,7 +6,7 @@ import { StatisticsService } from '@components/statistics/statistics.service';
 import { Injectable } from '@nestjs/common';
 
 const firstSeasson = new Date(2021, 9, 1);
-const MINIMUM_GAMES = 20;
+const MINIMUM_GAMES = 0;
 const WEAK_SEASSON_MINIMUM_GAMES = 0;
 
 @Injectable()
@@ -39,7 +39,7 @@ export class SeassonsService {
 
     private isWeakSeasson = pipe(
         this.averageGameCount,
-        lessThan(MINIMUM_GAMES)
+        lessThan(MINIMUM_GAMES),
     );
 
     private filterParticipiants = pipe(
@@ -50,6 +50,7 @@ export class SeassonsService {
     private formatSeasson(seassons: LeaderboardEntity[][]) {
         return seassons.map((players, index, array) => ({
                 number: array.length - index,
+                maxScore: players.length * 2,
                 isWeak: this.isWeakSeasson(players),
                 players: players.filter(this.filterParticipiants(players)),
                 ...this.getSeassonDateRange(index),
