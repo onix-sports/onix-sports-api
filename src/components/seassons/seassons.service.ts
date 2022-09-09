@@ -53,7 +53,7 @@ export class SeassonsService {
                 maxScore: players.length * 2,
                 isWeak: this.isWeakSeasson(players),
                 players: players.filter(this.filterParticipiants(players)),
-                ...this.getSeassonDateRange(index),
+                ...this.getSeassonDateRange(array.length - index - 1),
             }));
     }
 
