@@ -4,6 +4,7 @@ export default function sortByScore(users: {
   games: any;
   _id: any;
   name: any;
+  isGuest: boolean;
 }[]) {
   return users
       .sort((a, b) => b.winrate - a.winrate || b.gpg - a.gpg)
