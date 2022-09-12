@@ -9,6 +9,11 @@ import _ from 'lodash';
 import { FakeStatisticsService } from './fake-statistics.service';
 import sortByScore from './helpers/sort-by-score.helper';
 import { LeaderboardEntity } from '@components/common/interfaces/leaderboard-entity.interface';
+import { pipe } from '@components/common/utils/pipe';
+import { lessThan } from '@components/common/utils/less-than';
+
+const MINIMUM_GAMES = 20;
+const WEAK_SEASSON_MINIMUM_GAMES = 0;
 
 @Injectable()
 export class StatisticsService {
@@ -93,6 +98,36 @@ export class StatisticsService {
     return chances;
   }
 
+  private filterByGames(games: number) {
+    return (player: LeaderboardEntity) => player.games >= games;
+}
+
+  private averageGameCount(players: LeaderboardEntity[]) {
+    return players.reduce((acc, val, index, array) => acc + val.games / array.length, 0);
+}
+
+  private filterBySeassonMinimumGames(isWeak: boolean) {
+    return this.filterByGames(isWeak ? WEAK_SEASSON_MINIMUM_GAMES : MINIMUM_GAMES);
+  }
+
+  private filterGuests(player: LeaderboardEntity) {
+    return !player.isGuest;
+  }
+
+  public isWeakSeasson = pipe(
+      this.averageGameCount,
+      lessThan(MINIMUM_GAMES),
+  )
+
+  public filterParticipiants = pipe(
+      this.isWeakSeasson,
+      this.filterBySeassonMinimumGames.bind(this),
+  )
+
+  public calculateMaxScore(players: LeaderboardEntity[]) {
+    return players.filter(this.filterGuests).length * 2;
+  }
+
   public async getLeaderboard(dateFrom?: Date, dateTo?: Date): Promise<LeaderboardEntity[]> {
     let stats = await this.statisticRepository.getStatsPeriod([], dateFrom, dateTo);
     const fakeStats = await this.fakeStatisticService.getStats(stats.map(({ _id }) => new ObjectId(_id)));
@@ -105,10 +140,21 @@ export class StatisticsService {
       const gpg = (rGoals * 1.2 + mGoals) / (games || 1);
       const winrate = won / (games || 1) * 100;
 
-      return { gpg, winrate, games, _id, name };
+      return { gpg, winrate, games, _id, name, isGuest: false };
     });
 
-    return sortByScore(users);
+    const participiants = users.filter(this.filterParticipiants(users));
+    const guests = users
+      .filter(({ _id }) => !participiants.find(({ _id: id }) => id.equals(_id)))
+      .map((guest) => ({
+        ...guest,
+        wScore: '-',
+        gScore: '-',
+        score: '-',
+        isGuest: true
+      }));
+
+    return [...sortByScore(participiants), ...guests];
   }
 
   public getEnemies(player: ObjectId, enemies: ObjectId[], games: Number = 20) {
