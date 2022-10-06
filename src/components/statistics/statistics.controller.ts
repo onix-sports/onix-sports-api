@@ -45,4 +45,13 @@ export class StatisticsController {
   ) {
     return this.statisticService.getTournamentStats(id);
   }
+
+  @ApiParam({
+    name: 'id',
+    type: String,
+  })
+  @Get('/profile/:id')
+  public async getProfileStats(@Param('id', ParseObjectIdPipe) id: ObjectId) {
+    return this.statisticService.getProfileStats(id);
+  }
 }

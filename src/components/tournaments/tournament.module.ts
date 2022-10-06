@@ -1,4 +1,5 @@
 import { GamesModule } from "@components/games/games.module";
+import { StatisticsModule } from "@components/statistics/statistics.module";
 import { UsersModule } from "@components/users/users.module";
 import { Module } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
@@ -20,7 +21,8 @@ import { TournamentService } from "./tournament.service";
         collection: TournamentConstants.models.tournaments,
         schema: TournamentSchema,
       }
-    ])
+    ]),
+    StatisticsModule
   ],
   controllers: [TournamentController, TournamentGeneratorController],
   providers: [TournamentService, TournamentRepository, TournamentGenerator],

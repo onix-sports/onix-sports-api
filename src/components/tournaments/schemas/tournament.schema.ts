@@ -2,7 +2,7 @@ import gamesConstants from "@components/games/games-constants";
 import userConstants from "@components/users/user-constants";
 import { TournamentConstants as tournamentConstants} from "../tournament.constants";
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
-import { ObjectId } from "mongoose";
+import { ObjectId, Types } from "mongoose";
 import { TournamentStatus } from "../enum/tour-status.enum";
 import { TournamentType } from "../enum/tour-type.enum";
 
@@ -25,6 +25,9 @@ export class Tournament {
 
   @Prop({ required: false })
   type: TournamentType;
+
+  @Prop({})
+  best: Types.ObjectId;
 };
 
 export type TournamentDocument = Tournament & Document;

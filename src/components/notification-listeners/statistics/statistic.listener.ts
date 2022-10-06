@@ -21,9 +21,7 @@ export class StatisticListener extends NotificationListener {
   protected bindHandlers() {}
 
   @OnEvent('tournament.closed')
-  async handleCloseTournament({ tournament: { id } }: { tournament: { id: ObjectId } }) {
-    const { goals, totalGoals } = await this.statisticService.getTournamentPerform(id);
-
+  async handleCloseTournament({ performance: { goals, totalGoals } }: any) {
     if (!goals.length) return; 
 
     const html = tournamentPerformTemplate({ 
