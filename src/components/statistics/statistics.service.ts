@@ -164,4 +164,13 @@ export class StatisticsService {
   public getTeammates(player: ObjectId, teammates: ObjectId[], games: Number = 20) {
     return this.statisticRepository.getTeammates(player, teammates, games);
   }
+
+  public async getProfileStats(id: ObjectId) {
+    const stats = await this.statisticRepository.getProfileStats(id);
+
+    stats.gpg = stats.goals / stats.games;
+    stats.winrate = stats.won / stats.games;
+
+    return stats;
+  }
 }

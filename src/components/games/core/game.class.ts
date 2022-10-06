@@ -124,7 +124,7 @@ export class Game {
     
     const action = new Action({ 
       type,
-      player,
+      player: { ...player } as Player | undefined,
       info,
       game: new ObjectId(this.id),
       startedAt: this.startedAt,
@@ -167,9 +167,9 @@ export class Game {
     return { 
       id: this.id,
       title: this.title,
-      players: this.players.toArray(),
+      players: this.players.toArray().map((player) => ({ ...player } as Player)),
       actions: this.actions,
-      score: this.score,
+      score: { ...this.score },
       status: this.status,
       winner: this.winner,
       startedAt: this.startedAt,

@@ -10,6 +10,8 @@ import { FakeStatisticsRepository } from './fake-statistics.repository';
 import { FakeStatisticsService } from './fake-statistics.service';
 import { FakeStatisticsController } from './fake-statistics.controller';
 import { FakeStatisticSchema } from './schemas/fake-statistics.schema';
+import { TournamentConstants } from '@components/tournaments/tournament.constants';
+import { TournamentSchema } from '@components/tournaments/schemas/tournament.schema';
 
 @Module({
   imports: [
@@ -25,6 +27,11 @@ import { FakeStatisticSchema } from './schemas/fake-statistics.schema';
         collection: statisticsConstants.models.fakeStatistics,
         schema: FakeStatisticSchema,
       },
+      {
+        name: TournamentConstants.models.tournaments,
+        collection: TournamentConstants.models.tournaments,
+        schema: TournamentSchema,
+      }
     ]),
   ],
   controllers: [StatisticsController, FakeStatisticsController],
