@@ -54,8 +54,10 @@ export class Game {
     return new Game(gameObj);
   }
 
-  private _score(team: Teams) {
+  private _score(team: Teams, callback: Function) {
     this.score[team] = this.score[team] + 1;
+
+    callback();
 
     if (this.score[team] === 10) {
       this.finish(team);
@@ -75,11 +77,11 @@ export class Game {
     const player = this.players.get(id);
 
     player.goal();
-    this._score(player.team);
-
-    // Needs to be moved somewhere
-    const type = player.position == Positions.forward ? ActionType.MGOAL : ActionType.RGOAL;
-    this.pushAction({ type, player });
+    this._score(player.team, () => {
+      // Needs to be moved somewhere
+      const type = player.position == Positions.forward ? ActionType.MGOAL : ActionType.RGOAL;
+      this.pushAction({ type, player });
+    });
 
     return this;
   }
@@ -159,8 +161,8 @@ export class Game {
 
     this.duration = this.finishedAt.valueOf() - this.startedAt.valueOf() - this.totalPauseDuration;
 
-    this.emitter.emit(gameEvent(this.id, 'finish'));
     this.pushAction({ type: ActionType.FINISH });
+    this.emitter.emit(gameEvent(this.id, 'finish'));
   }
 
   public info(): GameInfo {
