@@ -1,7 +1,5 @@
 import { NotificationListener } from "@components/notification/abstract/notification-listener.absctract";
 import { NotificationService } from "@components/notification/notification.service";
-import { PuppeteerService } from "@components/puppeteer/puppeteer.service";
-import { StatisticsService } from "@components/statistics/services/statistics.service";
 import { Injectable } from "@nestjs/common";
 import { OnEvent } from "@nestjs/event-emitter";
 import { tournamentPerformTemplate } from "./templates/tournament-perform.template";
@@ -11,9 +9,6 @@ import { Markup } from "telegraf";
 export class StatisticListener extends NotificationListener {
   constructor(
     readonly notificationService: NotificationService,
-    
-    private readonly puppeteerService: PuppeteerService,
-    private readonly statisticService: StatisticsService,
   ) {
     super(notificationService);
   }
@@ -37,9 +32,10 @@ export class StatisticListener extends NotificationListener {
       caption, 
       parse_mode: 'HTML',
       reply_markup: Markup.inlineKeyboard([
+        Markup.button.url('My profile', `https://telegram.me/${process.env.BOT_USERNAME}`),
         Markup.button.url(`${goals[0].name}\'s profile`, `http://onix-sports.herokuapp.com/profile/${goals[0]._id}`),
         Markup.button.url('Leaderboard', `http://onix-sports.herokuapp.com/leaderboard`)
-      ], { columns: 1 }).reply_markup,
+      ], { columns: 2 }).reply_markup,
     });
   }
 }

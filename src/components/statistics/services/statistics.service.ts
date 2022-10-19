@@ -16,6 +16,7 @@ import { ProfileStatistic } from '../schemas/profile-statistics.schema';
 import { GameStatus } from '@components/games/enum/game-status.enum';
 import { Action } from '@components/games/core/action.class';
 import { Player } from '@components/games/core/player.class';
+import { UserEntity } from '@components/users/schemas/user.schema';
 
 const MINIMUM_GAMES = 20;
 const WEAK_SEASSON_MINIMUM_GAMES = 0;
@@ -241,5 +242,10 @@ export class StatisticsService {
     };
 
     return stats;
+  }
+
+  @OnEvent('user.created', { async: true })
+  public onUserCreated(user: UserEntity) {
+    return this.profileStatisticsRepository.createDefault(user._id);
   }
 }

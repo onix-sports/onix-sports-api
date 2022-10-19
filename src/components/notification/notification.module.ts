@@ -1,4 +1,5 @@
 import { PuppeteerModule } from "@components/puppeteer/puppeteer.module";
+import { UsersModule } from "@components/users/users.module";
 import { Module } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
 import { ChatRepository } from "./chat.repository";
@@ -14,6 +15,7 @@ import { ChatSchema } from "./schemas/chat.schema";
       schema: ChatSchema,
     }]),
     PuppeteerModule,
+    UsersModule,
   ],
   providers: [NotificationService, ChatRepository],
   exports: [NotificationService],
