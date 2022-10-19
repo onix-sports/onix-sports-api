@@ -4,13 +4,18 @@ import { Game } from '@components/games/core/game.class';
 import { Injectable } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { ObjectId } from 'mongodb';
-import StatisticsRepository from './statistics.repository';
+import StatisticsRepository from '../repositories/statistics.repository';
 import _ from 'lodash';
 import { FakeStatisticsService } from './fake-statistics.service';
-import sortByScore from './helpers/sort-by-score.helper';
+import sortByScore from '../helpers/sort-by-score.helper';
 import { LeaderboardEntity } from '@components/common/interfaces/leaderboard-entity.interface';
 import { pipe } from '@components/common/utils/pipe';
 import { lessThan } from '@components/common/utils/less-than';
+import { ProfileStatisticsRepository } from '../repositories/profile-statistics.repository';
+import { ProfileStatistic } from '../schemas/profile-statistics.schema';
+import { GameStatus } from '@components/games/enum/game-status.enum';
+import { Action } from '@components/games/core/action.class';
+import { Player } from '@components/games/core/player.class';
 
 const MINIMUM_GAMES = 20;
 const WEAK_SEASSON_MINIMUM_GAMES = 0;
@@ -21,6 +26,7 @@ export class StatisticsService {
     private readonly statisticRepository: StatisticsRepository,
     private readonly gameService: GamesService,
     private readonly fakeStatisticService: FakeStatisticsService,
+    private readonly profileStatisticsRepository: ProfileStatisticsRepository,
   ) {}
 
   @OnEvent('games.finished', { async: true })
@@ -47,7 +53,62 @@ export class StatisticsService {
 
     await this.gameService.pushStats(new ObjectId(game.id), _stats.map(({_id}) => _id));
 
+    const promises = info.players.map(async (player) => {
+      const games = await this.gameService.getGames({ players: player._id, status: GameStatus.FINISHED }, undefined, undefined, { duration: -1 });
+      const longestGame = games[0]
+      const shortestGame = games[games.length - 1];
+
+      const stats = await this.statisticRepository.getByPlayer(player._id);
+      const won = stats.reduce((acc, val) => (acc + (val.won ? 1 : 0)), 0);
+
+      return this.profileStatisticsRepository.updateGameStat(player._id, {
+        mGoals: player.mGoals,
+        rGoals: player.rGoals,
+        amGoals: player.amGoals,
+        arGoals: player.arGoals,
+        won: player.team == info.winner,
+        totalTime: info.duration,
+        longestGame: longestGame._id,
+        shortestGame: shortestGame._id,
+        gameId: new ObjectId(info.id),
+        winrate: won / stats.length,
+        ...this.calculatePositionsTimes(player._id, info.actions as Action[])
+      });
+    });
+
+    await Promise.all(promises);
+
     return _stats;
+  }
+
+  public updateTournamentStat = this.profileStatisticsRepository.updateTournamentStat.bind(this.profileStatisticsRepository);
+
+  private calculatePositionsTimes(user: ObjectId, actions: Action[]) {
+    return actions.reduce((acc, action, index) => {
+      const { position, team } = action.info.players.find((player: Player) => player._id.toString() === user.toString());
+      
+      if (index === 0) {
+        acc.currentPosition = position;
+
+        return acc;
+      }
+
+      if (action.type !== 'RESUME') {
+        acc[acc.currentPosition === 'forward' ? 'forwardTime' : 'keeperTime'] += action.timeFromStart - acc.timeFromStart;
+      }
+
+      if (
+        ['RGOAL', 'MGOAL'].includes(action.type) 
+        && acc.currentPosition === 'goalkeeper'
+        && action.player!.team !== team) {
+        acc.goalsSkipped++;
+      }
+
+      acc.timeFromStart = action.timeFromStart;
+      acc.currentPosition = position;
+
+      return acc;
+    }, { keeperTime: 0, forwardTime: 0, currentPosition: 'goalkeeper', timeFromStart: 0, goalsSkipped: 0 });
   }
 
   public getStatsPeriod(ids: ObjectId[], dateFrom?: Date, dateTo?: Date) {
@@ -166,10 +227,18 @@ export class StatisticsService {
   }
 
   public async getProfileStats(id: ObjectId) {
-    const stats = await this.statisticRepository.getProfileStats(id);
+    const _stats = await this.profileStatisticsRepository.getByUserId(id);
 
-    stats.gpg = stats.goals / stats.games;
-    stats.winrate = stats.won / stats.games;
+    if (!_stats) {
+      throw new Error('Profile statistics not found');
+    }
+
+    const stats: ProfileStatistic & { gpg: number, winrate: number, keepTime: number } = {
+      gpg: _stats.goals / _stats.games,
+      winrate: _stats.won / _stats.games,
+      keepTime: _stats.keeperTime / _stats.goalsSkipped,
+      ..._stats
+    };
 
     return stats;
   }

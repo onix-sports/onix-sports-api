@@ -24,6 +24,9 @@ export class User {
 
   @Prop({ type: RolesEnum, default: RolesEnum.user })
   role: RolesEnum = RolesEnum.user;
+
+  @Prop({ default: usersConstants.defaultAvatar })
+  avatarUrl: string;
 };
 
 export type UserEntity = User & Document;

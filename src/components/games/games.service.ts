@@ -26,12 +26,12 @@ export class GamesService {
     return this.gamesRepository.getGameInfo(id);
   }
 
-  public getGames(query: FilterQuery<GameEntity>, limit: number = 0, skip: number = 0) {
+  public getGames(query: FilterQuery<GameEntity>, limit: number = 0, skip: number = 0, sort: any = {}) {
     Object.keys(query).forEach((key) => {
       if (query[key] == undefined) delete query[key];
     });
 
-    return this.gamesRepository.getGames(query, limit, skip);
+    return this.gamesRepository.getGames(query, limit, skip, sort);
   }
 
   public pushStats(id: ObjectId, stats: ObjectId[]) {

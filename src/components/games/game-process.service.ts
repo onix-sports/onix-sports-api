@@ -102,8 +102,8 @@ export class GameProcessService {
   private async finish(game: Game) {
     const info = game.info();
 
-    await this.eventEmitter.emitAsync('games.finished', { game, info });
     await this.saveGame(game.id, info);
+    await this.eventEmitter.emitAsync('games.finished', { game, info });
 
     this.emiter.emit('finished', { id: info.id, info });
   }

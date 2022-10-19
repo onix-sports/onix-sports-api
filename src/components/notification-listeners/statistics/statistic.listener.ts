@@ -1,7 +1,7 @@
 import { NotificationListener } from "@components/notification/abstract/notification-listener.absctract";
 import { NotificationService } from "@components/notification/notification.service";
 import { PuppeteerService } from "@components/puppeteer/puppeteer.service";
-import { StatisticsService } from "@components/statistics/statistics.service";
+import { StatisticsService } from "@components/statistics/services/statistics.service";
 import { Injectable } from "@nestjs/common";
 import { OnEvent } from "@nestjs/event-emitter";
 import { ObjectId } from "mongodb";

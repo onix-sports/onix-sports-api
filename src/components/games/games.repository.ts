@@ -37,7 +37,7 @@ export default class GamesRepository {
     return game;
   }
 
-  async getGames(query: FilterQuery<GameEntity>,limit: number, skip: number) {
-    return this.gameModel.find(query).skip(skip).limit(limit).populate('players', { name: 1, _id: 1 });
+  async getGames(query: FilterQuery<GameEntity>,limit: number, skip: number, sort: any = {}) {
+    return this.gameModel.find(query, {}, { sort }).skip(skip).limit(limit).populate('players', { name: 1, _id: 1 });
   }
 }

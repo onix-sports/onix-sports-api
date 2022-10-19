@@ -1,5 +1,5 @@
 import { LeaderboardEntity } from '@components/common/interfaces/leaderboard-entity.interface';
-import { StatisticsService } from '@components/statistics/statistics.service';
+import { StatisticsService } from '@components/statistics/services/statistics.service';
 import { Injectable } from '@nestjs/common';
 
 const firstSeasson = new Date(2021, 9, 1);

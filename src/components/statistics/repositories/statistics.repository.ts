@@ -2,21 +2,17 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { ObjectId } from 'mongodb';
 import { Injectable } from '@nestjs/common';
-import statisticsConstants from './statistics-constants';
-import { StatisticEntity } from './schemas/statistic.schema';
-import CreateStatsDto from './dto/create-stats.dto';
-import { statsAggregationPipe } from './helpers/stats-aggregation.helper';
-import { lastGamesAggregationPipe } from './helpers/last-games-pipe.helper';
-import { TournamentConstants } from '@components/tournaments/tournament.constants';
-import { TournamentDocument } from '@components/tournaments/schemas/tournament.schema';
+import statisticsConstants from '../statistics-constants';
+import { Statistic, StatisticEntity } from '../schemas/statistic.schema';
+import CreateStatsDto from '../dto/create-stats.dto';
+import { statsAggregationPipe } from '../helpers/stats-aggregation.helper';
+import { lastGamesAggregationPipe } from '../helpers/last-games-pipe.helper';
 
 @Injectable()
 export default class StatisticsRepository {
   constructor(
     @InjectModel(statisticsConstants.models.statistics) 
     private readonly statisticModel: Model<StatisticEntity>,
-    @InjectModel(TournamentConstants.models.tournaments)
-    private readonly tournamentModel: Model<TournamentDocument>,
   ) {}
 
   create(stats: CreateStatsDto[]) {
@@ -124,40 +120,7 @@ export default class StatisticsRepository {
     return this.aggregateStats([], pipe);
   }
 
-  public async getProfileStats(id: ObjectId) {
-    const [stats] = await this.statisticModel.aggregate([
-      { $match: { user: id } },
-      {
-        $group: {
-          _id: "$user",
-          goals: {
-            $sum: { $add: ["$mGoals", "$rGoals"] },
-          },
-          mGoals: {
-            $sum: "$mGoals",
-          },
-          rGoals: {
-            $sum: "$rGoals",
-          },
-          aGoals: {
-            $sum: { $add: ["$amGoals", "$arGoals"] },
-          },
-          won: {
-            $sum: {
-              $cond: ["$won", 1, 0],
-            },
-          },
-          games: {
-            $sum: {
-              $cond: [true, 1, 0],
-            },
-          },
-        },
-      }
-    ]);
-
-    const best = await this.tournamentModel.countDocuments({ best: id });
-
-    return { ...stats, best };
+  public getByPlayer(user: ObjectId): Promise<Statistic[]> {
+    return this.statisticModel.find({ user }, {}, { sort: { createdAt: -1 } }).lean() as unknown as Promise<Statistic[]>;
   }
 }
