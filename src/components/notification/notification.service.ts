@@ -1,7 +1,8 @@
 import { PuppeteerService } from "@components/puppeteer/puppeteer.service";
+import { UsersService } from "@components/users/users.service";
 import { Injectable, Logger, OnModuleInit } from "@nestjs/common";
 import { EventEmitter2 } from "eventemitter2";
-import { Telegraf } from "telegraf";
+import { Markup, Telegraf } from "telegraf";
 import { ExtraPhoto, ExtraReplyMessage } from "telegraf/typings/telegram-types";
 import { InputFile } from "typegram";
 import { ChatRepository } from "./chat.repository";
@@ -13,6 +14,7 @@ export class NotificationService implements OnModuleInit {
     private readonly chatRepository: ChatRepository,
     private readonly eventEmitter: EventEmitter2,
     private readonly puppeteerService: PuppeteerService,
+    private readonly usersService: UsersService,
   ) {}
 
   private logger: Logger = new Logger(NotificationService.name);
@@ -41,6 +43,21 @@ export class NotificationService implements OnModuleInit {
     });
   }
 
+  private async profileReadyHandler(data: any) {
+    const user = await this.usersService.updateTelegramData(data.from.id, data.from.username, data.from);
+
+    const avatar = await data.telegram.getUserProfilePhotos(data.from.id,  0, 1).then((res: any) => res.photos[0].slice(-1)[0]);
+    const result = await data.telegram.getFileLink(avatar.file_id);
+    
+    await this.usersService.updateAvatar(user?._id, result.href);
+
+    data.reply('Your profile is ready!', {
+      reply_markup: Markup.inlineKeyboard([
+        Markup.button.url('Profile', `http://onix-sports.herokuapp.com/profile/${user?._id}`),
+      ], { columns: 1 }).reply_markup,
+    });
+  }
+
   private bindCommands() {
     this.bot.command('subscribe', async (data) => {
       await this.chatRepository.subscribe(data.chat.id);
@@ -53,6 +70,9 @@ export class NotificationService implements OnModuleInit {
 
       data.reply('This chat was unsubscribed from notifications!');
     });
+
+    this.bot.command('profile', this.profileReadyHandler.bind(this)); 
+    this.bot.start(this.profileReadyHandler.bind(this))
   }
 
   public send(chatId: Number, text: string, extra?: ExtraReplyMessage) {

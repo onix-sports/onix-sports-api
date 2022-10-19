@@ -4,7 +4,7 @@ import { ParseDatePipe } from '@pipes/date.pipe';
 import { ParseObjectIdPipe } from '@pipes/objectId.pipe';
 import { ObjectIdsPipe } from '@pipes/objectIds.pipe';
 import { ObjectId } from 'mongodb';
-import { StatisticsService } from './statistics.service';
+import { StatisticsService } from '../services/statistics.service';
 
 @ApiTags('Statistics')
 @Controller('statistics')

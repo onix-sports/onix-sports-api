@@ -6,5 +6,18 @@ export const tournamentPerformTemplate = (ctx: any) => {
     encoding: 'utf-8',
   });
 
-  return Handlebars.compile(hbs)(ctx);
+  const caption = `
+Statistics 2.0
+
+GPG - ${ctx.name}'s goals per game
+TOTAL - ${ctx.name}'s goals / all players goals
+
+#bestperformer
+#${ctx.name}
+    `
+
+  return {
+    html: Handlebars.compile(hbs)(ctx),
+    caption,
+  }
 };

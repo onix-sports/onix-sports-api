@@ -1,7 +1,7 @@
 import { MongoUpdate } from "@components/common/types/mongo-update.type";
 import { Injectable } from "@nestjs/common";
-import { FakeStatisticsRepository } from "./fake-statistics.repository";
-import { FakeStatisticEntity } from "./schemas/fake-statistics.schema";
+import { FakeStatisticsRepository } from "../repositories/fake-statistics.repository";
+import { FakeStatisticEntity } from "../schemas/fake-statistics.schema";
 
 @Injectable()
 export class FakeStatisticsService {

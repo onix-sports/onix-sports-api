@@ -1,6 +1,7 @@
 export default {
   models: {
     statistics: 'statistics',
-    fakeStatistics: 'fakestatistics'
+    fakeStatistics: 'fakestatistics',
+    profileStatistics: 'profilestatistics',
   },
 };

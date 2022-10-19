@@ -5,7 +5,7 @@ import { OnEvent, EventEmitter2 } from "@nestjs/event-emitter";
 import { CreateTournamentDto } from "./dto/create-tournament.dto";
 import { TournamentStatus } from "./enum/tour-status.enum";
 import { TournamentRepository } from "./tournament.repository";
-import { StatisticsService } from "@components/statistics/statistics.service";
+import { StatisticsService } from "@components/statistics/services/statistics.service";
 import { Types } from "mongoose";
 
 @Injectable()
@@ -45,7 +45,10 @@ export class TournamentService {
 
   async closeTournament(id: String) {
     const performance = await this.statisticsService.getTournamentPerform(Types.ObjectId(id as string));
-    const res = await this.tournamentRepository.updateById(id, { $set: { status: TournamentStatus.CLOSED, best: Types.ObjectId(performance.goals[0]._id) } });
+    const [res] = await Promise.all([
+      this.tournamentRepository.updateById(id, { $set: { status: TournamentStatus.CLOSED, best: Types.ObjectId(performance.goals[0]._id) } }),
+      this.statisticsService.updateTournamentStat(performance.goals[0]._id, true),
+    ]);
     
     this.eventEmitter.emit('tournament.closed', { performance });
 

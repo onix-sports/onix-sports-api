@@ -1,8 +1,8 @@
 import { Body, Controller, Get, Patch, Query } from "@nestjs/common";
 import { ApiQuery, ApiTags } from "@nestjs/swagger";
 import { ObjectIdsPipe } from "@pipes/objectIds.pipe";
-import FakeStatsDto from "./dto/set-fake-stats.dto";
-import { FakeStatisticsService } from "./fake-statistics.service";
+import FakeStatsDto from "../dto/set-fake-stats.dto";
+import { FakeStatisticsService } from "../services/fake-statistics.service";
 import { ObjectId } from "mongodb";
 
 @ApiTags('Fake statistics')

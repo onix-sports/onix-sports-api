@@ -2,7 +2,7 @@ import { NotificationListener } from "@components/notification/abstract/notifica
 import { NotificationMessage } from "@components/notification/interfaces/notification-message.interface";
 import { NotificationService } from "@components/notification/notification.service";
 import { PuppeteerService } from "@components/puppeteer/puppeteer.service";
-import { StatisticsService } from "@components/statistics/statistics.service";
+import { StatisticsService } from "@components/statistics/services/statistics.service";
 import { TournamentType } from "@components/tournaments/enum/tour-type.enum";
 import { Injectable } from "@nestjs/common";
 import { OnEvent } from "@nestjs/event-emitter";

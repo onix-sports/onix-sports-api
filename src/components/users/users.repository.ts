@@ -1,21 +1,39 @@
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { FilterQuery, Model } from 'mongoose';
 import { ObjectId } from 'mongodb';
 import { Injectable } from '@nestjs/common';
 import userConstants from './user-constants';
-import { UserEntity } from './schemas/user.schema';
+import { TelegramData, UserEntity } from './schemas/user.schema';
 import SignUpDto from '@components/auth/dto/sign-up.dto';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
 
 @Injectable()
 export default class UsersRepository {
   constructor(
     @InjectModel(userConstants.models.users) 
-    private readonly userModel: Model<UserEntity>
+    private readonly userModel: Model<UserEntity>,
+    private readonly eventEmitter: EventEmitter2
   ) {}
 
-  create(user: SignUpDto) {
-    return this.userModel.create(user);
+  async create(user: SignUpDto) {
+    const _user = await this.userModel.create(user);
+
+    await this.eventEmitter.emitAsync('user.created', _user);
+
+    return _user;
+  }
+
+  async createFromTelegram(telegram: TelegramData) {
+    const user = await this.userModel.create({
+      name: telegram.first_name,
+      email: `${telegram.first_name}@test.com`,
+      telegram
+    });
+
+    await this.eventEmitter.emitAsync('user.created', user);
+
+    return user;
   }
 
   getAll(limit: number, skip: number) {
@@ -24,5 +42,9 @@ export default class UsersRepository {
 
   getUser(id: ObjectId) {
     return this.userModel.findById(id, { password: 0 });
+  }
+
+  set(filter: FilterQuery<UserEntity>, $set: any) {
+    return this.userModel.findOneAndUpdate(filter, { $set });
   }
 }
