@@ -45,13 +45,15 @@ export class NotificationService implements OnModuleInit {
 
   private async profileReadyHandler(data: any) {
     const user = await this.usersService.updateTelegramData(data.from.id, data.from.username, data.from);
+    const avatar = await data.telegram.getUserProfilePhotos(data.from.id,  0, 1).then((res: any) => (res.photos[0] || []).slice(-1)[0]);
 
-    const avatar = await data.telegram.getUserProfilePhotos(data.from.id,  0, 1).then((res: any) => res.photos[0].slice(-1)[0]);
-    const result = await data.telegram.getFileLink(avatar.file_id);
-    
-    await this.usersService.updateAvatar(user?._id, result.href);
+    if (avatar) {
+      const result = await data.telegram.getFileLink(avatar.file_id);
+      
+      await this.usersService.updateAvatar(user?._id, result.href);
+    }
 
-    data.reply('Your profile is ready!', {
+    data.reply(`${data.from.first_name}, your profile is ready!`, {
       reply_markup: Markup.inlineKeyboard([
         Markup.button.url('Profile', `http://onix-sports.herokuapp.com/profile/${user?._id}`),
       ], { columns: 1 }).reply_markup,
