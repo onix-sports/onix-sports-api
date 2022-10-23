@@ -1,6 +1,8 @@
 import { PuppeteerService } from "@components/puppeteer/puppeteer.service";
+import { UserEntity } from "@components/users/schemas/user.schema";
 import { UsersService } from "@components/users/users.service";
 import { Injectable, Logger, OnModuleInit } from "@nestjs/common";
+import { OnEvent } from "@nestjs/event-emitter";
 import { EventEmitter2 } from "eventemitter2";
 import { Markup, Telegraf } from "telegraf";
 import { ExtraPhoto, ExtraReplyMessage } from "telegraf/typings/telegram-types";
@@ -43,15 +45,33 @@ export class NotificationService implements OnModuleInit {
     });
   }
 
+  /** Temp solution */
+  @OnEvent('telegram.updateAvatar')
+  public async updateAvatar(user: UserEntity) {
+    if (!user.telegram.id) return;
+
+    const avatar = await this.Bot.telegram.getUserProfilePhotos(user.telegram.id,  0, 1).then((res: any) => (res.photos[0] || []).slice(-1)[0]);
+
+    if (avatar) {
+      const result = await this.Bot.telegram.getFileLink(avatar.file_id);
+      
+      await this.usersService.updateAvatar(user?._id, result.href);
+
+      return result.href;
+    }
+  }
+
   private async profileReadyHandler(data: any) {
     const user = await this.usersService.updateTelegramData(data.from.id, data.from.username, data.from);
+    // const avatar = await data.telegram.getUserProfilePhotos(data.from.id,  0, 1).then((res: any) => (res.photos[0] || []).slice(-1)[0]);
 
-    const avatar = await data.telegram.getUserProfilePhotos(data.from.id,  0, 1).then((res: any) => res.photos[0].slice(-1)[0]);
-    const result = await data.telegram.getFileLink(avatar.file_id);
-    
-    await this.usersService.updateAvatar(user?._id, result.href);
+    // if (avatar) {
+    //   const result = await data.telegram.getFileLink(avatar.file_id);
+      
+    //   await this.usersService.updateAvatar(user?._id, result.href);
+    // }
 
-    data.reply('Your profile is ready!', {
+    data.reply(`${data.from.first_name}, your profile is ready!`, {
       reply_markup: Markup.inlineKeyboard([
         Markup.button.url('Profile', `http://onix-sports.herokuapp.com/profile/${user?._id}`),
       ], { columns: 1 }).reply_markup,
