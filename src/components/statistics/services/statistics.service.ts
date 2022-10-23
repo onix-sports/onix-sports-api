@@ -2,7 +2,7 @@ import { GameInfo } from '@components/games/core/interfaces/game-info.interface'
 import { GamesService } from '@components/games/games.service';
 import { Game } from '@components/games/core/game.class';
 import { Injectable } from '@nestjs/common';
-import { OnEvent } from '@nestjs/event-emitter';
+import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { ObjectId } from 'mongodb';
 import StatisticsRepository from '../repositories/statistics.repository';
 import _ from 'lodash';
@@ -28,6 +28,7 @@ export class StatisticsService {
     private readonly gameService: GamesService,
     private readonly fakeStatisticService: FakeStatisticsService,
     private readonly profileStatisticsRepository: ProfileStatisticsRepository,
+    private readonly eventEmiter: EventEmitter2
   ) {}
 
   @OnEvent('games.finished', { async: true })
@@ -232,6 +233,13 @@ export class StatisticsService {
 
     if (!_stats) {
       throw new Error('Profile statistics not found');
+    }
+
+    /** Temp solution */
+    const [avatar] = await this.eventEmiter.emitAsync('telegram.updateAvatar', _stats.user);
+
+    if (avatar) {
+      (_stats.user as unknown as UserEntity).avatarUrl = avatar;
     }
 
     const stats: ProfileStatistic & { gpg: number, winrate: number, keepTime: number } = {

@@ -19,7 +19,7 @@ import { SeassonsModule } from '@components/seassons/seassons.module';
     ConfigModule.forRoot({
       isGlobal: true,
     }),
-    AuthModule,
+    // AuthModule,
     MongooseModule.forRoot(process.env.MONGODB_URL as string, {
       useCreateIndex: true,
       useNewUrlParser: true,
