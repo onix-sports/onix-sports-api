@@ -31,4 +31,8 @@ export class ChatRepository {
   getSubscribers() {
     return this.chatModel.find({ subscribed: true });
   }
+
+  getMain() {
+    return this.chatModel.findOne({ subscribed: true, main: true });
+  }
 }

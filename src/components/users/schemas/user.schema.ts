@@ -31,7 +31,7 @@ export class User {
   @Prop({ type: Boolean, default: true })
   verified: boolean = true;
 
-  @Prop({ type: RolesEnum, default: RolesEnum.user })
+  @Prop({ type: typeof RolesEnum, default: RolesEnum.user, enum: RolesEnum })
   role: RolesEnum = RolesEnum.user;
 
   @Prop({ default: usersConstants.defaultAvatar })

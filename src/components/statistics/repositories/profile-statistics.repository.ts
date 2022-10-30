@@ -13,14 +13,18 @@ export class ProfileStatisticsRepository {
     ) {}
 
     public getByUserId(user: ObjectId) {
+        // @TODO: remove strictPopulate: false 
         return this.profileStatisticsModel.findOne({ user }).populate({
             path: 'user longestGame shortestGame lastGames',
             populate: {
                 path: 'stats players',
                 populate: {
-                    path: 'user'
-                }
-            }
+                    path: 'user',
+                    strictPopulate: false,
+                },
+                strictPopulate: false,
+            },
+            strictPopulate: false,
         }).lean();
     }
 
@@ -62,10 +66,11 @@ export class ProfileStatisticsRepository {
         return statistic?.save();
     }
 
-    public updateTournamentStat(user: ObjectId, isBest: boolean) {
+    public updateTournamentStat(user: ObjectId, isBest: boolean, isRespected: boolean = false) {
         return this.profileStatisticsModel.updateOne({ user }, {
             $inc: {
-                best: isBest ? 1 : 0
+                best: isBest ? 1 : 0,
+                respected: isRespected ? 1 : 0,
             }
         });
     }

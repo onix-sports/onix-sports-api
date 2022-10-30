@@ -44,6 +44,10 @@ export default class UsersRepository {
     return this.userModel.findById(id, { password: 0 });
   }
 
+  get(filter: FilterQuery<UserEntity>) {
+    return this.userModel.find(filter, { password: 0 });
+  }
+
   set(filter: FilterQuery<UserEntity>, $set: any) {
     return this.userModel.findOneAndUpdate(filter, { $set });
   }

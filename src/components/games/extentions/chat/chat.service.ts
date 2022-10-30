@@ -23,7 +23,7 @@ export class ChatExtention implements IExtention {
   ) {}
 
   private readonly logger: Logger = new Logger(ChatExtention.name);
-  private readonly chats: {[key: string]: { messages: IMessage[], info?: GameInfo, interval: number, actions?: Action[] }} = {};
+  private readonly chats: {[key: string]: { messages: IMessage[], info?: GameInfo, interval: NodeJS.Timeout, actions?: Action[] }} = {};
 
   @OnEvent('game.started')
   private handleStart({ id, info }: { id: string, info: GameInfo }) {

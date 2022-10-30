@@ -9,10 +9,10 @@ import { ConfigModule } from '@nestjs/config';
 import { PuppeteerModule as MainPuppeteerModule } from 'nest-puppeteer';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { MongooseModule } from '@nestjs/mongoose';
-import { AuthModule } from '../auth/auth.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { SeassonsModule } from '@components/seassons/seassons.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
@@ -21,13 +21,13 @@ import { SeassonsModule } from '@components/seassons/seassons.module';
     }),
     // AuthModule,
     MongooseModule.forRoot(process.env.MONGODB_URL as string, {
-      useCreateIndex: true,
       useNewUrlParser: true,
       useUnifiedTopology: true,
     }),
     EventEmitterModule.forRoot({
       delimiter: '.'
     }),
+    ScheduleModule.forRoot(),
     MainPuppeteerModule.forRoot(),
     StatisticsModule,
     GamesModule,

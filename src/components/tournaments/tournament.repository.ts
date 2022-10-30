@@ -34,10 +34,14 @@ export class TournamentRepository {
   }
 
   updateById(id: StringObjectId, update: UpdateWithAggregationPipeline | UpdateQuery<TournamentDocument>) {
-    return this.tournamentModel.findByIdAndUpdate(id, update);
+    return this.tournamentModel.findByIdAndUpdate(id, update).populate('players');
   }
 
-  update(filter: FilterQuery<TournamentDocument>, update: UpdateWithAggregationPipeline | UpdateQuery<TournamentDocument>) {
-    return this.tournamentModel.updateOne(filter, update);
+  updateOne(filter: FilterQuery<TournamentDocument>, update: UpdateWithAggregationPipeline | UpdateQuery<TournamentDocument>) {
+    return this.tournamentModel.findOneAndUpdate(filter, update, { new: true }).populate('players');
+  }
+
+  countDocuments(filter: FilterQuery<TournamentDocument>) {
+    return this.tournamentModel.countDocuments(filter);
   }
 }

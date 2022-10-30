@@ -34,7 +34,7 @@ export class GameListener extends NotificationListener {
   async handleGameStart({ id }: { id: string }) {
     const { players, _id } = await this.gameService.getGameInfo(new ObjectId(id));
 
-    this.notificationService.sendToAll(...gameStartedTemplate({ players, _id }));
+    this.notificationService.sendToMain(...gameStartedTemplate({ players, _id }));
   }
 
   @OnEvent('game.finished')
