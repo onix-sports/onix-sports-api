@@ -30,13 +30,20 @@ export class TournamentGenerator {
     8: eightPlayersTournament,
   };
 
+  private getPlan(count: number): any {
+    if (count <= 0) throw new Error('Not enough players to generate tournament');
+
+    return this.plans[count] || this.getPlan(count - 1);
+  }
+
   public async generate(ids: ObjectId[], _title?: string) {
+    const gamesPlan = this.getPlan(ids.length);
+
     let tournament: (Tournament & Document & Document<any, any>) | null = await this.tournamentService.create({ title: _title });
 
     const players = await Promise.all(ids.map((id: ObjectId) => this.userService.getUser(id)));
     const shuffled = shuffle<UserEntity | any>(players);
-
-    const { type, games: _games, teams }: any = this.plans[ids.length] ? this.plans[ids.length](shuffled, tournament._id) : [];
+    const { type, games: _games, teams }: any = gamesPlan(shuffled, tournament._id);
     const games = await this.gameService.createGames(_games, { _id: 1, name: 1 });
 
     await tournament.update({ type });

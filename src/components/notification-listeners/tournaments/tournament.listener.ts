@@ -1,5 +1,5 @@
 import { NotificationListener } from "@components/notification/abstract/notification-listener.absctract";
-import { NotificationMessage } from "@components/notification/interfaces/notification-message.interface";
+import { MatchedContext, NotificationMessage } from "@components/notification/interfaces/notification-message.interface";
 import { NotificationService } from "@components/notification/notification.service";
 import { StatisticsService } from "@components/statistics/services/statistics.service";
 import { TournamentType } from "@components/tournaments/enum/tour-type.enum";
@@ -18,6 +18,9 @@ import { eightPlayersTemplate } from "./templates/8-players.template";
 import { Message, Update } from "telegraf/typings/core/types/typegram";
 import { setTimeout } from 'timers/promises';
 import { respectedPlayerTemplate } from "./templates/respected.template";
+import { Context } from "telegraf";
+import { TournamentGenerator } from "@components/tournaments/tournament-generator.service";
+import { RolesEnum } from "@decorators/roles.decorator";
 
 @Injectable()
 export class TournamentListener extends NotificationListener {
@@ -26,6 +29,7 @@ export class TournamentListener extends NotificationListener {
     private readonly statisticService: StatisticsService,
     private readonly tournamentService: TournamentService,
     private readonly userService: UsersService,
+    private readonly tournamentGenerator: TournamentGenerator,
   ) {
     super(notificationService);
   }
@@ -43,6 +47,8 @@ export class TournamentListener extends NotificationListener {
     'го футбик', 'го футбол', 'го футбік', 'може катнем', 'пора катнуть', 'go football',
     'го в футбол', 'го доиграем', 'го катнем', 'го катку', 'го сыграем', 'давай в футбол', 'давайте в футбол',
   ];
+
+  tournamentsRequests: any = {};
 
   bindHandlers() {}
 
@@ -77,6 +83,65 @@ export class TournamentListener extends NotificationListener {
     return Object.values(results).reduce((acc, val) => acc + val.length, 0);
   }
 
+  private async requestTournament(ctx: MatchedContext<Context<Update>, "text" | "message">) {
+    const result = await ctx.replyWithPoll('Football?', ['+', '-', '+, ~10 min'], { is_anonymous: false });
+
+    this.tournamentsRequests[result.chat.id] = {
+      pollId: result.poll.id,
+      messageId: result.message_id,
+      players: [
+        // Users for test
+        new ObjectId('6156d2243a12c500166d99db'), 
+        new ObjectId('6156d22c3a12c500166d99dc'), 
+        new ObjectId('6156d2393a12c500166d99dd'),
+        new ObjectId('6156d2433a12c500166d99de'),
+        new ObjectId('6156d24c3a12c500166d99df'),
+        new ObjectId('6156d2563a12c500166d99e0'),
+      ],
+    };
+  }
+
+  @OnEvent('notification.poll_answer')
+  async handleTournamentPollAnswer({ ctx, user }: NotificationMessage<"poll_answer"> & { user: UserEntity }) {
+    const chatId = Object
+      .keys(this.tournamentsRequests)
+      .find((key) => this.tournamentsRequests[key].pollId === ctx.pollAnswer.poll_id);
+
+    if (!chatId) return;
+
+    if (ctx.pollAnswer.option_ids[0] === 2) return;
+
+    this.tournamentsRequests[chatId].players.push(user._id);
+  }
+
+  @OnEvent('tournament.request')
+  async handleTournamentRequest({ ctx }: NotificationMessage<'text'>) {
+    this.requestTournament(ctx);
+  }
+
+  @OnEvent('tournament.generate') 
+  async handleTournamentGenerate({ ctx, user }: NotificationMessage<'text'> & { user: UserEntity }) {
+    if (user.role !== RolesEnum.admin) {
+      return ctx.reply('You don\'t have permissions to do this.');
+    }
+
+    const request = this.tournamentsRequests[ctx.chat.id];
+
+    if (!request) {
+      return ctx.reply('You have to request tournament first.');
+    };
+
+    await this.tournamentGenerator.generate(request.players)
+      .then(() => {
+        this.notificationService.closePoll(ctx.chat.id, request.messageId);
+
+        delete this.tournamentsRequests[ctx.chat.id];
+      })
+      .catch((error) => {
+        ctx.reply(error.message);
+      });
+  }
+
   @OnEvent('tournament.generated')
   async handleTournamentGenerated({ tournament, players, teams } : any) {
     if (!this.templates[tournament.type]) return;
@@ -102,7 +167,7 @@ export class TournamentListener extends NotificationListener {
 
     if (!isMatched) return;
 
-    ctx.replyWithPoll('Football?', ['+', '-', '+, ~10 min'], { is_anonymous: false }).catch(console.error);
+    this.requestTournament(ctx);
   }
 
   @OnEvent('tournament.closed')

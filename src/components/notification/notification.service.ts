@@ -93,6 +93,18 @@ export class NotificationService implements OnModuleInit {
 
     this.bot.command('profile', this.profileReadyHandler.bind(this)); 
     this.bot.start(this.profileReadyHandler.bind(this))
+
+    this.bot.command('tournament_request', async (data) => {
+      const user = await this.usersService.updateTelegramData(data.from.id, data.from.username, data.from);
+
+      this.eventEmitter.emit('tournament.request', { bot: this.bot, ctx: data, user });
+    });
+
+    this.bot.command('tournament_generate', async (data) => {
+      const user = await this.usersService.updateTelegramData(data.from.id, data.from.username, data.from);
+
+      this.eventEmitter.emit('tournament.generate', { bot: this.bot, ctx: data, user });
+    });
   }
 
   public send(chatId: Number, text: string, extra?: ExtraReplyMessage) {
