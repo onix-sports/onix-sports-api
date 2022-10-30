@@ -39,7 +39,7 @@ export class Statistic {
   @Prop({ type: ObjectId, required: true, ref: userConstants.models.users })
   user: ObjectId;
 
-  @Prop({ type: Teams, required: true })
+  @Prop({ type: typeof Teams, required: true, enum: Teams })
   team: Teams;
 
   @Prop({ required: true })

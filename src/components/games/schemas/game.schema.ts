@@ -24,10 +24,10 @@ export class Game {
   @Prop({ type: [ObjectId], ref: statisticsConstants.models.statistics })
   stats: ObjectId[];
 
-  @Prop({ type: Teams })
+  @Prop({ type: typeof Teams, enum: Teams })
   winner: Teams;
 
-  @Prop({ type: GameStatus, default: GameStatus.DRAFT })
+  @Prop({ type: typeof GameStatus, default: GameStatus.DRAFT, enum: GameStatus })
   status: GameStatus;
 
   @Prop({ type: [ObjectId], default: [] })

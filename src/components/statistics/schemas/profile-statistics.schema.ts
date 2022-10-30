@@ -69,6 +69,9 @@ export class ProfileStatistic {
 
   @Prop({ default: 0 })
   goalsSkipped: number;
+
+  @Prop({ default: 0 })
+  respected: number;
 };
 
 export type ProfileStatisticEntity = ProfileStatistic & Document;

@@ -246,7 +246,7 @@ export class StatisticsService {
       gpg: _stats.goals / _stats.games,
       winrate: _stats.won / _stats.games,
       keepTime: _stats.keeperTime / _stats.goalsSkipped,
-      ..._stats
+      ..._stats as unknown as ProfileStatistic
     };
 
     return stats;

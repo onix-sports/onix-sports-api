@@ -28,7 +28,7 @@ export class StatisticListener extends NotificationListener {
       goalsPercent: goals[0].goals / totalGoals * 100
     });
 
-    await this.notificationService.sendHtmlToAll(html, { 
+    await this.notificationService.sendHtmlToMain(html, { 
       caption, 
       parse_mode: 'HTML',
       reply_markup: Markup.inlineKeyboard([

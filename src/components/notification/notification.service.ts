@@ -1,11 +1,12 @@
-import { PuppeteerService } from "@components/puppeteer/puppeteer.service";
+import { PuppeteerService, ScreenshotOptions } from "@components/puppeteer/puppeteer.service";
 import { UserEntity } from "@components/users/schemas/user.schema";
+import userConstants from "@components/users/user-constants";
 import { UsersService } from "@components/users/users.service";
 import { Injectable, Logger, OnModuleInit } from "@nestjs/common";
 import { OnEvent } from "@nestjs/event-emitter";
 import { EventEmitter2 } from "eventemitter2";
 import { Markup, Telegraf } from "telegraf";
-import { ExtraPhoto, ExtraReplyMessage } from "telegraf/typings/telegram-types";
+import { ExtraAnimation, ExtraPhoto, ExtraPoll, ExtraReplyMessage, ExtraStopPoll } from "telegraf/typings/telegram-types";
 import { InputFile } from "typegram";
 import { ChatRepository } from "./chat.repository";
 import { ChatType } from "./enums/chat-type.enum";
@@ -38,38 +39,37 @@ export class NotificationService implements OnModuleInit {
   }
 
   private bindHandlers() {
+    this.bot.catch((err, ctx) => {
+      this.logger.error(err);
+    })
+
     this.bot.on('message', (ctx) => {
       this.chatRepository.create({ chatId: ctx.chat.id, type: ctx.chat.type as ChatType });
 
       this.eventEmitter.emit('notification.message', { bot: this.bot, ctx });
     });
+    this.bot.on('poll_answer', async (ctx) => {
+      const user = await this.usersService.updateTelegramData(ctx.pollAnswer.user.id, ctx.pollAnswer.user.username, ctx.pollAnswer.user);
+
+      this.eventEmitter.emit('notification.poll_answer', { bot: this.bot, ctx, user });
+    })
   }
 
   /** Temp solution */
   @OnEvent('telegram.updateAvatar')
   public async updateAvatar(user: UserEntity) {
-    if (!user.telegram.id) return;
+    if (!user.telegram.id) return userConstants.defaultAvatar;
 
     const avatar = await this.Bot.telegram.getUserProfilePhotos(user.telegram.id,  0, 1).then((res: any) => (res.photos[0] || []).slice(-1)[0]);
+    const result = avatar ? await this.Bot.telegram.getFileLink(avatar.file_id) : { href: userConstants.defaultAvatar };
+    
+    await this.usersService.updateAvatar(user?._id, result.href);
 
-    if (avatar) {
-      const result = await this.Bot.telegram.getFileLink(avatar.file_id);
-      
-      await this.usersService.updateAvatar(user?._id, result.href);
-
-      return result.href;
-    }
+    return result.href;
   }
 
   private async profileReadyHandler(data: any) {
     const user = await this.usersService.updateTelegramData(data.from.id, data.from.username, data.from);
-    // const avatar = await data.telegram.getUserProfilePhotos(data.from.id,  0, 1).then((res: any) => (res.photos[0] || []).slice(-1)[0]);
-
-    // if (avatar) {
-    //   const result = await data.telegram.getFileLink(avatar.file_id);
-      
-    //   await this.usersService.updateAvatar(user?._id, result.href);
-    // }
 
     data.reply(`${data.from.first_name}, your profile is ready!`, {
       reply_markup: Markup.inlineKeyboard([
@@ -99,30 +99,57 @@ export class NotificationService implements OnModuleInit {
     return this.bot.telegram.sendMessage(chatId as number, text, extra);
   }
 
-  public sendPhoto(chatId: Number, photo: string | InputFile, extra?: ExtraPhoto) {
+  public sendPhoto(chatId: Number, photo: string | InputFile, extra?: ExtraPhoto | ExtraAnimation) {
+    if ((photo as any).source.endsWith('.gif')) {
+      return this.bot.telegram.sendAnimation(chatId as number, photo, extra);
+    }
+
     return this.bot.telegram.sendPhoto(chatId as number, photo, extra);
   }
 
-  public async sendToAll(text: string, extra?: ExtraReplyMessage ) {
-    const chats = await this.chatRepository.getSubscribers();
+  public async sendHtml(chatId: Number, html: string, extra?: ExtraPhoto, options?: ScreenshotOptions) {
+    const path = await this.puppeteerService.screenshot(html, options);
 
-    chats.forEach((chat) => {
-      this.send(chat.chatId, text, extra);
-    });
+    return this.sendPhoto(chatId, { source: path } as InputFile, extra);
   }
 
-  public async sendPhotoToAll(photo: any, extra?: ExtraPhoto) {
-    const chats = await this.chatRepository.getSubscribers();
-
-    chats.forEach((chat) => {
-      this.sendPhoto(chat.chatId, photo, extra);
-    });
+  public sendPoll(chatId: Number, question: string, options: string[], extra?: ExtraPoll) {
+    return this.bot.telegram.sendPoll(chatId as number, question, options, extra);
   }
 
-  public async sendHtmlToAll(html: string, extra?: ExtraPhoto) {
-    this.puppeteerService.removeScreenshots();
-    const path = await this.puppeteerService.screenshot(html);
+  public async sendToMain(text: string, extra?: ExtraReplyMessage ) {
+    const chat = await this.chatRepository.getMain();
 
-    await this.sendPhotoToAll({ source: path }, extra);
+    if (!chat) return Promise.resolve(null);
+
+    return this.send(chat.chatId, text, extra);
+  }
+
+  public async sendPhotoToMain(photo: any, extra?: ExtraPhoto) {
+    const chat = await this.chatRepository.getMain();
+
+    if (!chat) return Promise.resolve(null);
+
+    return this.sendPhoto(chat.chatId, photo, extra);
+  }
+
+  public async sendHtmlToMain(html: string, extra?: ExtraPhoto, options?: ScreenshotOptions) {
+    const path = await this.puppeteerService.screenshot(html, options);
+
+    return this.sendPhotoToMain({ source: path }, extra);
+  }
+
+  public async sendPollToMain(question: string, options: string[], extra?: ExtraPoll) {
+    const chat = await this.chatRepository.getMain();
+
+    if (!chat) return Promise.resolve(null);
+
+    const result = await this.sendPoll(chat.chatId as number, question, options, extra);
+
+    return result;
+  }
+
+  public async closePoll(chatId: string | number, messageId: number, extra?: ExtraStopPoll | undefined) {
+    return this.bot.telegram.stopPoll(chatId, messageId, extra);
   }
 }

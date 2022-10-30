@@ -14,6 +14,9 @@ export class Chat {
 
   @Prop({ default: false })
   subscribed: Boolean;
+
+  @Prop({ default: false })
+  main: Boolean;
 }
 
 export type ChatDocument = Chat & Document;
