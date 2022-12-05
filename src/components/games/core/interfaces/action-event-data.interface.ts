@@ -1,7 +1,7 @@
-import { ActionType } from "@components/games/enum/action-type.enum";
-import { Action } from "../action.class";
-import { Player } from "../player.class";
-import { GameInfo } from "./game-info.interface";
+import { ActionType } from '@components/games/enum/action-type.enum';
+import { Action } from '../action.class';
+import { Player } from '../player.class';
+import { GameInfo } from './game-info.interface';
 
 export interface IActionEventData {
   type: ActionType;

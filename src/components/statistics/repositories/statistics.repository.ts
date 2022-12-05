@@ -10,117 +10,117 @@ import { lastGamesAggregationPipe } from '../helpers/last-games-pipe.helper';
 
 @Injectable()
 export default class StatisticsRepository {
-  constructor(
-    @InjectModel(statisticsConstants.models.statistics) 
+    constructor(
+    @InjectModel(statisticsConstants.models.statistics)
     private readonly statisticModel: Model<StatisticEntity>,
-  ) {}
+    ) {}
 
-  create(stats: CreateStatsDto[]) {
-    return this.statisticModel.create(stats);
-  }
-
-  public async getStatsPeriod(ids: ObjectId[] = [], dateFrom: Date = new Date(0), dateTo: Date = new Date(Date.now())) {
-    const pipe: any = [{
-      $match: {
-        createdAt: { 
-          $gte: dateFrom,
-          $lte: dateTo,
-        },
-      }
-    }];
-
-    return this.aggregateStats(ids, pipe);
-  }
-
-  public async getTournament(tournament: ObjectId) {
-    const pipe: any = [{ $match: { tournament } }];
-
-    return this.aggregateStats([], pipe);
-  }
-
-  public getLastGames(ids: ObjectId[], count: Number) {
-    return this.aggregateStats(ids, lastGamesAggregationPipe(count));
-  }
-
-  private async aggregateStats(ids: ObjectId[], pipe: any[] = []) {
-    const $match: any = {};
-
-    if (ids && ids.length) {
-      $match.user = { $in: ids } ;
+    create(stats: CreateStatsDto[]) {
+        return this.statisticModel.create(stats);
     }
-    
-    return this.statisticModel.aggregate([
-      { $match },
-      ...pipe,
-      ...statsAggregationPipe(),
-    ]);
-  }
 
-  public getEnemies(user: ObjectId, enemies: ObjectId[], games: Number) {
-    const pipe = [
-      {
-        $match: { 
-          user,
-          enemy: {
-            $in: enemies,
-          }, 
-        },
-      },
-      ...lastGamesAggregationPipe(games),
-    ];
+    public async getStatsPeriod(ids: ObjectId[] = [], dateFrom: Date = new Date(0), dateTo: Date = new Date(Date.now())) {
+        const pipe: any = [{
+            $match: {
+                createdAt: {
+                    $gte: dateFrom,
+                    $lte: dateTo,
+                },
+            },
+        }];
 
-    return this.aggregateStats([], pipe);
-  }
+        return this.aggregateStats(ids, pipe);
+    }
 
-  public getTeammates(user: ObjectId, teammates: ObjectId[], games: Number) {
-    const pipe = [
-      {
-        $match: { 
-          user,
-          teammate: {
-            $in: teammates,
-          }, 
-        },
-      },
-      ...lastGamesAggregationPipe(games),
-    ];
+    public async getTournament(tournament: ObjectId) {
+        const pipe: any = [{ $match: { tournament } }];
 
-    return this.aggregateStats([], pipe);
-  }
+        return this.aggregateStats([], pipe);
+    }
 
-  public getTeammateVersusEnemies(user: ObjectId, teammate: ObjectId, enemies: ObjectId[], games: Number) {
-    const pipe = [
-      {
-        $match: { 
-          user,
-          teammate,
-          enemy: {
-            $in: enemies,
-          },
-        },
-      },
-      ...lastGamesAggregationPipe(games),
-    ];
+    public getLastGames(ids: ObjectId[], count: Number) {
+        return this.aggregateStats(ids, lastGamesAggregationPipe(count));
+    }
 
-    return this.aggregateStats([], pipe);
-  }
+    private async aggregateStats(ids: ObjectId[], pipe: any[] = []) {
+        const $match: any = {};
 
-  public getTeamsStats(team1:any[], team2: any[], games: Number) {
-    const pipe = [
-      {
-        $match: { 
-          user: team1[0]._id,
-          teammate: team1[1]._id,
-          enemy: [team2[0]._id, team2[1]._id],
-        },
-      },
-      ...lastGamesAggregationPipe(games),
-    ];
+        if (ids && ids.length) {
+            $match.user = { $in: ids };
+        }
 
-    return this.aggregateStats([], pipe);
-  }
+        return this.statisticModel.aggregate([
+            { $match },
+            ...pipe,
+            ...statsAggregationPipe(),
+        ]);
+    }
 
-  public getByPlayer(user: ObjectId): Promise<Statistic[]> {
-    return this.statisticModel.find({ user }, {}, { sort: { createdAt: -1 } }).lean() as unknown as Promise<Statistic[]>;
-  }
+    public getEnemies(user: ObjectId, enemies: ObjectId[], games: Number) {
+        const pipe = [
+            {
+                $match: {
+                    user,
+                    enemy: {
+                        $in: enemies,
+                    },
+                },
+            },
+            ...lastGamesAggregationPipe(games),
+        ];
+
+        return this.aggregateStats([], pipe);
+    }
+
+    public getTeammates(user: ObjectId, teammates: ObjectId[], games: Number) {
+        const pipe = [
+            {
+                $match: {
+                    user,
+                    teammate: {
+                        $in: teammates,
+                    },
+                },
+            },
+            ...lastGamesAggregationPipe(games),
+        ];
+
+        return this.aggregateStats([], pipe);
+    }
+
+    public getTeammateVersusEnemies(user: ObjectId, teammate: ObjectId, enemies: ObjectId[], games: Number) {
+        const pipe = [
+            {
+                $match: {
+                    user,
+                    teammate,
+                    enemy: {
+                        $in: enemies,
+                    },
+                },
+            },
+            ...lastGamesAggregationPipe(games),
+        ];
+
+        return this.aggregateStats([], pipe);
+    }
+
+    public getTeamsStats(team1:any[], team2: any[], games: Number) {
+        const pipe = [
+            {
+                $match: {
+                    user: team1[0]._id,
+                    teammate: team1[1]._id,
+                    enemy: [team2[0]._id, team2[1]._id],
+                },
+            },
+            ...lastGamesAggregationPipe(games),
+        ];
+
+        return this.aggregateStats([], pipe);
+    }
+
+    public getByPlayer(user: ObjectId): Promise<Statistic[]> {
+        return this.statisticModel.find({ user }, {}, { sort: { createdAt: -1 } }).lean() as unknown as Promise<Statistic[]>;
+    }
 }

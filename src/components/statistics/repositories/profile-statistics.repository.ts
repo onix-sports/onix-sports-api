@@ -1,9 +1,9 @@
-import { Injectable } from "@nestjs/common";
-import { InjectModel } from "@nestjs/mongoose";
-import { Model } from "mongoose";
+import { Injectable } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
 import { ObjectId } from 'mongodb';
-import { ProfileStatisticEntity } from "../schemas/profile-statistics.schema";
-import statisticsConstants from "../statistics-constants";
+import { ProfileStatisticEntity } from '../schemas/profile-statistics.schema';
+import statisticsConstants from '../statistics-constants';
 
 @Injectable()
 export class ProfileStatisticsRepository {
@@ -13,7 +13,7 @@ export class ProfileStatisticsRepository {
     ) {}
 
     public getByUserId(user: ObjectId) {
-        // @TODO: remove strictPopulate: false 
+    // @TODO: remove strictPopulate: false
         return this.profileStatisticsModel.findOne({ user }).populate({
             path: 'user longestGame shortestGame lastGames',
             populate: {
@@ -51,12 +51,12 @@ export class ProfileStatisticsRepository {
             $push: {
                 lastGames: data.gameId,
                 winrateLine: data.winrate,
-                goalsLine: data.mGoals + data.rGoals
+                goalsLine: data.mGoals + data.rGoals,
             },
             $set: {
                 longestGame: data.longestGame,
                 shortestGame: data.shortestGame,
-            }
+            },
         }, { new: true });
 
         if (statistic) {
@@ -71,7 +71,7 @@ export class ProfileStatisticsRepository {
             $inc: {
                 best: isBest ? 1 : 0,
                 respected: isRespected ? 1 : 0,
-            }
+            },
         });
     }
 }

@@ -1,8 +1,8 @@
-import { toObjectId } from "@components/common/transforms/to-object-id.transform";
-import { toObjectIds } from "@components/common/transforms/to-object-ids.transform";
-import { ApiProperty } from "@nestjs/swagger";
-import { Transform } from "class-transformer";
-import { ObjectId } from "mongodb";
+import { toObjectId } from '@components/common/transforms/to-object-id.transform';
+import { toObjectIds } from '@components/common/transforms/to-object-ids.transform';
+import { ApiProperty } from '@nestjs/swagger';
+import { Transform } from 'class-transformer';
+import { ObjectId } from 'mongodb';
 
 export default class CreateGameDto {
     @ApiProperty({ type: String })

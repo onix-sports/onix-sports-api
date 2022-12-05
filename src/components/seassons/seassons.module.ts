@@ -4,8 +4,8 @@ import { SeassonsController } from './seassons.controller';
 import { SeassonsService } from './seassons.service';
 
 @Module({
-  imports: [StatisticsModule],
-  controllers: [SeassonsController],
-  providers: [SeassonsService]
+    imports: [StatisticsModule],
+    controllers: [SeassonsController],
+    providers: [SeassonsService],
 })
 export class SeassonsModule {}

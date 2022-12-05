@@ -3,4 +3,4 @@ export enum ChatType {
   group = 'group',
   supergroup = 'supergroup',
   channel = 'channel',
-};
+}

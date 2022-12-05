@@ -8,25 +8,25 @@ import { AppModule } from './components/app/app.module';
 const { PORT } = process.env;
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+    const app = await NestFactory.create(AppModule);
 
-  app.useGlobalFilters(new AllExceptionsFilter());
-  app.useGlobalPipes(new ValidationPipe({ transform: true }));
+    app.useGlobalFilters(new AllExceptionsFilter());
+    app.useGlobalPipes(new ValidationPipe({ transform: true }));
 
-  const config = new DocumentBuilder()
-    .setTitle('Onix sports swagger')
-    .setDescription('Onix sports API')
-    .setVersion('2')
-    .addTag('Onix Sports')
-    .addBearerAuth({ in: 'header', type: 'http' })
-    .build();
-  const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api', app, document);
+    const config = new DocumentBuilder()
+        .setTitle('Onix sports swagger')
+        .setDescription('Onix sports API')
+        .setVersion('2')
+        .addTag('Onix Sports')
+        .addBearerAuth({ in: 'header', type: 'http' })
+        .build();
+    const document = SwaggerModule.createDocument(app, config);
+    SwaggerModule.setup('api', app, document);
 
-  app.enableCors();
+    app.enableCors();
 
-  await app.listen(PORT as string);
+    await app.listen(PORT as string);
 
-  console.log(`http://localhost:${PORT}/`);
+    console.log(`http://localhost:${PORT}/`);
 }
 bootstrap();

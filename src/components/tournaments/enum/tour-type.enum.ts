@@ -3,4 +3,4 @@ export enum TournamentType {
   FIVE_PLAYERS = 'Five players',
   SIX_PLAYERS = 'Three teams',
   EIGHT_PLAYERS = 'Four teams',
-};
+}

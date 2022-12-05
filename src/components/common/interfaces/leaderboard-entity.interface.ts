@@ -8,4 +8,4 @@ export interface LeaderboardEntity {
     _id: any;
     name: any;
     isGuest: boolean;
-};
+}

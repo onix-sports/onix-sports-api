@@ -1,20 +1,19 @@
-import { OnModuleInit } from "@nestjs/common";
-import { Context, Telegraf } from "telegraf";
-import { Update } from "typegram";
-import { NotificationService } from "../notification.service";
+import { Context, Telegraf } from 'telegraf';
+import { Update } from 'typegram';
+import { NotificationService } from '../notification.service';
 
 export abstract class NotificationListener {
-  constructor(
+    constructor(
     readonly notificationService: NotificationService,
-  ) {}
+    ) {}
 
-  bot: Telegraf<Context<Update>>;
+    bot: Telegraf<Context<Update>>;
 
-  onModuleInit() {
-    this.bot = this.notificationService.Bot;
+    onModuleInit() {
+        this.bot = this.notificationService.Bot;
 
-    this.bindHandlers();
-  }
+        this.bindHandlers();
+    }
 
   protected abstract bindHandlers(): void;
 }

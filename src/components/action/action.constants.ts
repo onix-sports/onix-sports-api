@@ -1,5 +1,5 @@
 export const actionConstants = {
-  models: {
-    action: 'action',
-  },
+    models: {
+        action: 'action',
+    },
 };

@@ -4,8 +4,8 @@ import RolesGuard from '@guards/roles.guard';
 import { RolesEnum } from '@decorators/roles.decorator';
 
 export default function Authorized(...roles: RolesEnum[]) {
-  return applyDecorators(
-    SetMetadata('roles', roles),
-    UseGuards(JwtAccessGuard, RolesGuard),
-  );
+    return applyDecorators(
+        SetMetadata('roles', roles),
+        UseGuards(JwtAccessGuard, RolesGuard),
+    );
 }

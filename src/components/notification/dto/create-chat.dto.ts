@@ -1,6 +1,7 @@
-import { ChatType } from "../enums/chat-type.enum";
+import { ChatType } from '../enums/chat-type.enum';
 
 export class CreateChatDto {
-  chatId: Number;
-  type: ChatType;
+    chatId: Number;
+
+    type: ChatType;
 }

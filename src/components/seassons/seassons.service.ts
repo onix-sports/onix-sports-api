@@ -21,28 +21,29 @@ export class SeassonsService {
 
     private formatSeasson(seassons: LeaderboardEntity[][]) {
         return seassons.map((players, index, array) => ({
-                number: array.length - index,
-                maxScore: this.statisticsService.calculateMaxScore(players),
-                isWeak: this.statisticsService.isWeakSeasson(players),
-                players: players.filter(this.statisticsService.filterParticipiants(players)),
-                ...this.getSeassonDateRange(array.length - index - 1),
-            }));
+            number: array.length - index,
+            maxScore: this.statisticsService.calculateMaxScore(players),
+            isWeak: this.statisticsService.isWeakSeasson(players),
+            players: players.filter(this.statisticsService.filterParticipiants(players)),
+            ...this.getSeassonDateRange(array.length - index - 1),
+        }));
     }
 
     async getSeassons() {
         const promises = [];
         let i = 0;
 
+        // eslint-disable-next-line no-constant-condition
         while (true) {
-            const { dateFrom, dateTo } =  this.getSeassonDateRange(i);
+            const { dateFrom, dateTo } = this.getSeassonDateRange(i);
 
             if (dateTo.valueOf() > Date.now()) break;
 
             promises.push(
-                this.statisticsService.getLeaderboard(dateFrom, dateTo)
+                this.statisticsService.getLeaderboard(dateFrom, dateTo),
             );
 
-            i++;
+            i += 1;
         }
 
         return Promise

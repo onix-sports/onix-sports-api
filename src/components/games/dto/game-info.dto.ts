@@ -1,36 +1,36 @@
-import { ApiProperty } from "@nestjs/swagger";
-import { Action } from "../core/action.class";
-import { Player } from "../core/player.class";
-import { Teams } from "../enum/teams.enum";
+import { ApiProperty } from '@nestjs/swagger';
+import { Action } from '../core/action.class';
+import { Player } from '../core/player.class';
+import { Teams } from '../enum/teams.enum';
 
 export class GameInfoDto {
   @ApiProperty()
-  id: String;
+      id: String;
 
   @ApiProperty()
-  winner: Teams;
+      winner: Teams;
 
   @ApiProperty()
-  title: String;
+      title: String;
 
   @ApiProperty()
-  finishedAt: Date;
+      finishedAt: Date;
 
   @ApiProperty()
-  startedAt: Date;
+      startedAt: Date;
 
   @ApiProperty({ type: Player, isArray: true })
-  players: [];
+      players: [];
 
   @ApiProperty()
-  status: String;
+      status: String;
 
   @ApiProperty()
-  score: String;
+      score: String;
 
   @ApiProperty()
-  duration: Number;
+      duration: Number;
 
   @ApiProperty({ type: Action, isArray: true })
-  actions: [];
+      actions: [];
 }

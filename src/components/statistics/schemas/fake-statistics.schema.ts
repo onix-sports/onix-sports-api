@@ -1,62 +1,62 @@
 import { Document } from 'mongoose';
 import { ObjectId } from 'mongodb';
 
-import statisticsConstants from '../statistics-constants';
 import userConstants from '@components/users/user-constants';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import statisticsConstants from '../statistics-constants';
 
 @Schema({
-  versionKey: false,
-  timestamps: true,
-  collection: statisticsConstants.models.fakeStatistics,
-  strict: true,
+    versionKey: false,
+    timestamps: true,
+    collection: statisticsConstants.models.fakeStatistics,
+    strict: true,
 })
 export class FakeStatistic {
   @Prop({ default: 0 })
-  mGoals: Number;
+      mGoals: Number;
 
   @Prop({ default: 0 })
-  rGoals: Number;
+      rGoals: Number;
 
   @Prop({ default: 0 })
-  goals: Number;
+      goals: Number;
 
   @Prop({ default: 0 })
-  amGoals: Number;
+      amGoals: Number;
 
   @Prop({ default: 0 })
-  arGoals: Number;
+      arGoals: Number;
 
   @Prop({ default: 0 })
-  aGoals: Number;
+      aGoals: Number;
 
   @Prop({ default: 0 })
-  blueWon: Number;
+      blueWon: Number;
 
   @Prop({ default: 0 })
-  redWon: Number;
+      redWon: Number;
 
   @Prop({ default: 0 })
-  won: Number;
+      won: Number;
 
   @Prop({ default: 0 })
-  blueGames: Number;
+      blueGames: Number;
 
   @Prop({ default: 0 })
-  redGames: Number;
+      redGames: Number;
 
   @Prop({ default: 0 })
-  games: Number;
+      games: Number;
 
   @Prop({ required: true, ref: userConstants.models.users })
-  user: ObjectId;
+      user: ObjectId;
 
   @Prop()
-  name: String;
+      name: String;
 
   @Prop({ default: false })
-  enabled: Boolean;
-};
+      enabled: Boolean;
+}
 
 export type FakeStatisticEntity = FakeStatistic & Document;
 

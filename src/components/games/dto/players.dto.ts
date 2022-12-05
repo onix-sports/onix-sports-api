@@ -1,12 +1,12 @@
-import { ApiProperty } from "@nestjs/swagger";
-import { ObjectId } from "mongoose";
+import { ApiProperty } from '@nestjs/swagger';
+import { ObjectId } from 'mongoose';
 
 export class PlayersDto {
   @ApiProperty({ type: [String] })
-  red: ObjectId[] = [];
+      red: ObjectId[] = [];
 
   @ApiProperty({ type: [String] })
-  blue: ObjectId[] = [];
+      blue: ObjectId[] = [];
 }
 
 export type Players = {

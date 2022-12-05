@@ -5,38 +5,38 @@ import UsersRepository from './users.repository';
 
 @Injectable()
 export class UsersService {
-  constructor(
+    constructor(
     private readonly usersRepository: UsersRepository,
-  ) {}
+    ) {}
 
-  getAll(limit: number = 0, skip: number = 0) {
-    return this.usersRepository.getAll(limit, skip);
-  }
-
-  getUser(id: ObjectId) {
-    return this.usersRepository.getUser(id);
-  }
-
-  getUsers(ids: ObjectId[]) {
-    return this.usersRepository.get({ _id: { $in: ids } });
-  }
-
-  async updateTelegramData(telegramId: number, username: string | undefined, telegram: any): Promise<UserEntity> {
-    const user = await this.usersRepository.set({
-      $or: [
-        { 'telegram.id': telegramId },
-        { 'telegram.username': username },
-      ]
-    }, { telegram });
-
-    if (!user) {
-      return this.usersRepository.createFromTelegram(telegram);
+    getAll(limit: number = 0, skip: number = 0) {
+        return this.usersRepository.getAll(limit, skip);
     }
 
-    return user;
-  }
+    getUser(id: ObjectId) {
+        return this.usersRepository.getUser(id);
+    }
 
-  updateAvatar(_id: ObjectId, avatarUrl: string) {
-    return this.usersRepository.set({ _id }, { avatarUrl });
-  }
+    getUsers(ids: ObjectId[]) {
+        return this.usersRepository.get({ _id: { $in: ids } });
+    }
+
+    async updateTelegramData(telegramId: number, username: string | undefined, telegram: any): Promise<UserEntity> {
+        const user = await this.usersRepository.set({
+            $or: [
+                { 'telegram.id': telegramId },
+                { 'telegram.username': username },
+            ],
+        }, { telegram });
+
+        if (!user) {
+            return this.usersRepository.createFromTelegram(telegram);
+        }
+
+        return user;
+    }
+
+    updateAvatar(_id: ObjectId, avatarUrl: string) {
+        return this.usersRepository.set({ _id }, { avatarUrl });
+    }
 }

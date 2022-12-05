@@ -1,57 +1,60 @@
-import { Injectable, Logger } from "@nestjs/common";
+import { Injectable, Logger } from '@nestjs/common';
 import fs from 'fs/promises';
-import puppeteerConstants from "./puppeteer.constants";
+import puppeteerConstants from './puppeteer.constants';
 
 @Injectable()
 export class ScreenshotRepository {
-  private src =  puppeteerConstants.folders.uploads;
-  private storage: {[key: string]: boolean} = {};
+    private src = puppeteerConstants.folders.uploads;
 
-  private logger: Logger = new Logger(ScreenshotRepository.name);
+    private storage: {[key: string]: boolean} = {};
 
-  public newPath(extention: 'gif' | 'png' | 'mp4') {
-    const newPath = `${this.src}/${Math.random().toString(36)}-${Date.now()}.${extention}`;
+    private logger: Logger = new Logger(ScreenshotRepository.name);
 
-    this.savePath(newPath);
+    public newPath(extention: 'gif' | 'png' | 'mp4') {
+        const newPath = `${this.src}/${Math.random().toString(36)}-${Date.now()}.${extention}`;
 
-    return newPath;
-  }
+        this.savePath(newPath);
 
-  public unlockPath(path: string) {
-    this.logger.log('Unlocking path: ' + path);
+        return newPath;
+    }
 
-    this.storage[path] = true;
-  }
+    public unlockPath(path: string) {
+        this.logger.log(`Unlocking path: ${path}`);
 
-  private savePath(path: string) {
-    return this.storage[path] = true;
-  }
+        this.storage[path] = true;
+    }
 
-  public async clearAll() {
-    await fs.readdir(this.src).then((files) => {
-      this.logger.log(`Before clearing ${files.join(', \n')} \n ${JSON.stringify(this.storage)}`);
-    });
+    private savePath(path: string) {
+        this.storage[path] = true;
 
-    const promises = Object
-      .keys(this.storage)
-      .filter((path) => this.storage[path])
-      .map((path) => {
-        delete this.storage[path];
+        return true;
+    }
 
-        return fs.unlink(path);
-      });
+    public async clearAll() {
+        await fs.readdir(this.src).then((files) => {
+            this.logger.log(`Before clearing ${files.join(', \n')} \n ${JSON.stringify(this.storage)}`);
+        });
 
-    return Promise
-      .all(promises)
-      .then(() => {
-        this.logger.log('Cleared all screenshots');
+        const promises = Object
+            .keys(this.storage)
+            .filter((path) => this.storage[path])
+            .map((path) => {
+                delete this.storage[path];
 
-        fs.readdir(this.src).then((files) => {
-          this.logger.log(`After clearing ${files.join(', ')} \n ${JSON.stringify(this.storage)}`);
-        })
-      })
-      .catch((error) => {
-        this.logger.error(`Something went wrong on clearing screenshots: ${error}`);
-      });
-  }
+                return fs.unlink(path);
+            });
+
+        return Promise
+            .all(promises)
+            .then(() => {
+                this.logger.log('Cleared all screenshots');
+
+                fs.readdir(this.src).then((files) => {
+                    this.logger.log(`After clearing ${files.join(', ')} \n ${JSON.stringify(this.storage)}`);
+                });
+            })
+            .catch((error) => {
+                this.logger.error(`Something went wrong on clearing screenshots: ${error}`);
+            });
+    }
 }

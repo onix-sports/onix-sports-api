@@ -1,12 +1,12 @@
 import UsersRepository from '@components/users/users.repository';
 import { ForbiddenException, Injectable } from '@nestjs/common';
-import JwtPayloadDto from './dto/jwt-payload.dto';
-import UserCreateDto from './dto/user-create.dto';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
+import { UserEntity } from '@components/users/schemas/user.schema';
+import JwtPayloadDto from './dto/jwt-payload.dto';
+import UserCreateDto from './dto/user-create.dto';
 import authConstants from './auth.constants';
 import AuthRepository from './auth.repository';
-import { UserEntity } from '@components/users/schemas/user.schema';
 import LoginDto from './dto/login.dto';
 
 @Injectable()
@@ -25,7 +25,7 @@ export class AuthService {
             last_name: user.lastName || '',
             username: user.username,
             language_code: 'ua',
-            is_bot: false
+            is_bot: false,
         });
     }
 
@@ -48,9 +48,9 @@ export class AuthService {
     async login(telegram: LoginDto, refresh: boolean = true) {
         let user: UserEntity = await this.usersRepository.get({
             $or: [
-              { 'telegram.id': telegram.id },
-              { 'telegram.username': telegram.username },
-            ]
+                { 'telegram.id': telegram.id },
+                { 'telegram.username': telegram.username },
+            ],
         }) as any;
 
         if (!user) {
@@ -61,10 +61,10 @@ export class AuthService {
             [user] = user;
         }
 
-        const payload: JwtPayloadDto = { 
+        const payload: JwtPayloadDto = {
             _id: user._id,
             role: user.role,
-            telegram 
+            telegram,
         };
 
         const accessToken = this.jwtService.sign(payload);
@@ -74,18 +74,18 @@ export class AuthService {
                 expiresIn: authConstants.jwt.expirationTime.refreshToken,
                 secret: this.configService.get<string>('REFRESH_TOKEN'),
             });
-    
+
             await this.authRepository.addRefreshToken(telegram.id, refreshToken);
 
             return {
                 accessToken,
                 refreshToken,
-            }
+            };
         }
 
         return {
             accessToken,
-        }
+        };
     }
 
     async verifyToken(token: string) {

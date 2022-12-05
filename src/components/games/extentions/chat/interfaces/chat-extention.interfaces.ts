@@ -1,3 +1,3 @@
-import { IMessage } from "./message.interface";
+import { IMessage } from './message.interface';
 
 export interface IGetRandomMessageResult extends IMessage {}

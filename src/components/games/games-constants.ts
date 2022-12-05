@@ -1,5 +1,5 @@
 export default {
-  models: {
-    games: 'games',
-  },
+    models: {
+        games: 'games',
+    },
 };

@@ -1,8 +1,8 @@
+import { ObjectId } from 'mongodb';
 import { Player } from '../player.class';
 import { Action } from '../action.class';
 import { GameStatus } from '../../enum/game-status.enum';
 import { Teams } from '../../enum/teams.enum';
-import { ObjectId } from 'mongodb';
 
 export interface GameInfo {
   id: any;

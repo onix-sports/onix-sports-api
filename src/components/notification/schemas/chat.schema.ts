@@ -1,22 +1,23 @@
-import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
-import { ChatType } from "../enums/chat-type.enum";
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { Document } from 'mongoose';
+import { ChatType } from '../enums/chat-type.enum';
 
 @Schema({
-  versionKey: false,
-  timestamps: true,
+    versionKey: false,
+    timestamps: true,
 })
 export class Chat {
   @Prop({ required: true })
-  type: ChatType;
+      type: ChatType;
 
   @Prop({ required: true, unique: true })
-  chatId: Number;
+      chatId: Number;
 
   @Prop({ default: false })
-  subscribed: Boolean;
+      subscribed: Boolean;
 
   @Prop({ default: false })
-  main: Boolean;
+      main: Boolean;
 }
 
 export type ChatDocument = Chat & Document;

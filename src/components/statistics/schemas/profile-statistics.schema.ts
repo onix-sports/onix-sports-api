@@ -1,78 +1,78 @@
 import { Document } from 'mongoose';
 import { ObjectId } from 'mongodb';
 
-import statisticsConstants from '../statistics-constants';
 import gamesConstants from '@components/games/games-constants';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import userConstants from '@components/users/user-constants';
+import statisticsConstants from '../statistics-constants';
 
 @Schema({
-  versionKey: false,
-  timestamps: true,
-  collection: statisticsConstants.models.profileStatistics,
-  strict: true,
+    versionKey: false,
+    timestamps: true,
+    collection: statisticsConstants.models.profileStatistics,
+    strict: true,
 })
 export class ProfileStatistic {
   @Prop({ required: true, ref: userConstants.models.users })
-  user: ObjectId;
+      user: ObjectId;
 
   @Prop({ default: 0 })
-  goals: number;
+      goals: number;
 
   @Prop({ default: 0 })
-  mGoals: number;
+      mGoals: number;
 
   @Prop({ default: 0 })
-  rGoals: number;
+      rGoals: number;
 
   @Prop({ default: 0 })
-  aGoals: number;
+      aGoals: number;
 
   @Prop({ default: 0 })
-  arGoals: number;
+      arGoals: number;
 
   @Prop({ default: 0 })
-  amGoals: number;
+      amGoals: number;
 
   @Prop({ default: 0 })
-  won: number;
+      won: number;
 
   @Prop({ default: 0 })
-  games: number;
+      games: number;
 
   @Prop({ default: 0 })
-  totalTime: number;
+      totalTime: number;
 
   @Prop({ default: [] })
-  goalsLine: Array<number>;
+      goalsLine: Array<number>;
 
   @Prop({ default: [] })
-  winrateLine: Array<number>;
+      winrateLine: Array<number>;
 
   @Prop({ ref: gamesConstants.models.games, default: [] })
-  lastGames: Array<ObjectId>;
+      lastGames: Array<ObjectId>;
 
   @Prop({ default: 0 })
-  best: number;
+      best: number;
 
   @Prop({ ref: gamesConstants.models.games, default: null })
-  longestGame: ObjectId;
+      longestGame: ObjectId;
 
-  @Prop({ ref: gamesConstants.models.games, default: null})
-  shortestGame: ObjectId;
-
-  @Prop({ default: 0 })
-  keeperTime: number;
+  @Prop({ ref: gamesConstants.models.games, default: null })
+      shortestGame: ObjectId;
 
   @Prop({ default: 0 })
-  forwardTime: number;
+      keeperTime: number;
 
   @Prop({ default: 0 })
-  goalsSkipped: number;
+      forwardTime: number;
 
   @Prop({ default: 0 })
-  respected: number;
-};
+      goalsSkipped: number;
+
+  @Prop({ default: 0 })
+      respected: number;
+}
 
 export type ProfileStatisticEntity = ProfileStatistic & Document;
 

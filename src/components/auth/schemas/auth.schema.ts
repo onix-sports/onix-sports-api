@@ -1,5 +1,6 @@
-import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
-import authConstants from "../auth.constants";
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { Document } from 'mongoose';
+import authConstants from '../auth.constants';
 
 @Schema({
     versionKey: false,
@@ -8,10 +9,10 @@ import authConstants from "../auth.constants";
 })
 export class Auth {
     @Prop({ type: String, required: true })
-    refreshToken: string = '';
+        refreshToken: string = '';
 
     @Prop({ type: Number, required: true, unique: true })
-    id: number = 0;
+        id: number = 0;
 }
 
 export type AuthEntity = Auth & Document;

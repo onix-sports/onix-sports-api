@@ -9,36 +9,36 @@ import { ConfigModule } from '@nestjs/config';
 import { PuppeteerModule as MainPuppeteerModule } from 'nest-puppeteer';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { MongooseModule } from '@nestjs/mongoose';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
 import { SeassonsModule } from '@components/seassons/seassons.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { AuthModule } from '@components/auth/auth.module';
+import { AppService } from './app.service';
+import { AppController } from './app.controller';
 
 @Module({
-  imports: [
-    ConfigModule.forRoot({
-      isGlobal: true,
-    }),
-    AuthModule,
-    MongooseModule.forRoot(process.env.MONGODB_URL as string, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    }),
-    EventEmitterModule.forRoot({
-      delimiter: '.'
-    }),
-    ScheduleModule.forRoot(),
-    MainPuppeteerModule.forRoot(),
-    StatisticsModule,
-    GamesModule,
-    TournamentModule,
-    ActionModule,
-    NotificationModule,
-    ListenersModule,
-    SeassonsModule,
-  ],
-  controllers: [AppController],
-  providers: [AppService],
+    imports: [
+        ConfigModule.forRoot({
+            isGlobal: true,
+        }),
+        AuthModule,
+        MongooseModule.forRoot(process.env.MONGODB_URL as string, {
+            useNewUrlParser: true,
+            useUnifiedTopology: true,
+        }),
+        EventEmitterModule.forRoot({
+            delimiter: '.',
+        }),
+        ScheduleModule.forRoot(),
+        MainPuppeteerModule.forRoot(),
+        StatisticsModule,
+        GamesModule,
+        TournamentModule,
+        ActionModule,
+        NotificationModule,
+        ListenersModule,
+        SeassonsModule,
+    ],
+    controllers: [AppController],
+    providers: [AppService],
 })
 export class AppModule {}
