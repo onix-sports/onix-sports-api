@@ -13,13 +13,14 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { SeassonsModule } from '@components/seassons/seassons.module';
 import { ScheduleModule } from '@nestjs/schedule';
+import { AuthModule } from '@components/auth/auth.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
     }),
-    // AuthModule,
+    AuthModule,
     MongooseModule.forRoot(process.env.MONGODB_URL as string, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
