@@ -8,8 +8,8 @@ export type TelegramData = {
   id: number;
   username: string;
   first_name: string;
-  last_name: string;
-  language_code: string;
+  last_name: string | undefined;
+  language_code?: string;
   is_bot: boolean;
 };
 

@@ -1,4 +1,5 @@
-import { Controller, Get, Param, Query } from '@nestjs/common';
+import Authorized from '@decorators/authorized.decorator';
+import { Controller, Get, Param, Query, Req } from '@nestjs/common';
 import { ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { ParseDatePipe } from '@pipes/date.pipe';
 import { ParseObjectIdPipe } from '@pipes/objectId.pipe';
@@ -49,9 +50,18 @@ export class StatisticsController {
   @ApiParam({
     name: 'id',
     type: String,
+    required: false
   })
   @Get('/profile/:id')
-  public async getProfileStats(@Param('id', ParseObjectIdPipe) id: ObjectId) {
+  @Authorized()
+  public async getProfileStats(@Param('id', ParseObjectIdPipe) id: ObjectId, @Req() req: any) {
     return this.statisticService.getProfileStats(id);
   }
+
+  // @Get('/profile')
+  // @Authorized()
+  // public async getProfileStatsByUser(@Req() req: any) {
+  //   console.log(req.user);
+  //   return this.statisticService.getProfileStats(req.user._id);
+  // }
 }

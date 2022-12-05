@@ -18,6 +18,7 @@ async function bootstrap() {
     .setDescription('Onix sports API')
     .setVersion('2')
     .addTag('Onix Sports')
+    .addBearerAuth({ in: 'header', type: 'http' })
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
