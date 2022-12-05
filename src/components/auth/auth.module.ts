@@ -3,7 +3,6 @@ import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
-import nest from '@nestjs/cli';
 import authConstants from './auth.constants';
 import { AuthController } from './auth.controller';
 import AuthRepository from './auth.repository';
