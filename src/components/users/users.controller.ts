@@ -2,9 +2,9 @@ import {
     Controller, Get, Param, Query,
 } from '@nestjs/common';
 import { ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
-import { ParseNumberPipe } from '@pipes/number.pipe';
-import { ParseObjectIdPipe } from '@pipes/objectId.pipe';
-import { ObjectId } from 'mongodb';
+import validationPipe from '@pipes/validation.pipe';
+import { GetUserDto } from './dto/get-user.dto';
+import { GetUsersDto } from './dto/get-users.dto';
 import { UsersService } from './users.service';
 
 @ApiTags('Users')
@@ -23,18 +23,13 @@ export class UsersController {
         required: false,
     })
     @Get('/')
-    public async getAll(
-    @Query('limit', ParseNumberPipe) limit: number,
-    @Query('skip', ParseNumberPipe) skip: number,
-    ) {
+    public async getAll(@Query(validationPipe) { skip, limit }: GetUsersDto) {
         return this.usersService.getAll(limit, skip);
     }
 
     @ApiParam({ name: 'id', type: String })
     @Get('/:id')
-    public getUser(
-    @Param('id', ParseObjectIdPipe) id: ObjectId,
-    ) {
+    public getUser(@Param(validationPipe) { id }: GetUserDto) {
         return this.usersService.getUser(id);
     }
 }

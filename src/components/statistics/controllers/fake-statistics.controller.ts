@@ -2,8 +2,8 @@ import {
     Body, Controller, Get, Patch, Query,
 } from '@nestjs/common';
 import { ApiQuery, ApiTags } from '@nestjs/swagger';
-import { ObjectIdsPipe } from '@pipes/objectIds.pipe';
-import { ObjectId } from 'mongodb';
+import validationPipe from '@pipes/validation.pipe';
+import { GetFakeStatsDto } from '../dto/get-fake-stats.dto';
 import FakeStatsDto from '../dto/set-fake-stats.dto';
 import { FakeStatisticsService } from '../services/fake-statistics.service';
 
@@ -14,18 +14,18 @@ export class FakeStatisticsController {
     private readonly fakeStatisticsService: FakeStatisticsService,
     ) {}
 
-  @Get('/fake')
-  @ApiQuery({
-      name: 'users',
-      type: String,
-      isArray: true,
-  })
-    public getStats(@Query('users', ObjectIdsPipe) users: any[]) {
+    @Get('/fake')
+    @ApiQuery({
+        name: 'users',
+        type: String,
+        isArray: true,
+    })
+    public getStats(@Query(validationPipe) { users }: GetFakeStatsDto) {
         return this.fakeStatisticsService.getStats(users);
     }
 
-  @Patch('/fake')
-  public setStats(@Body() { user, ...fakeStatsDto }: FakeStatsDto) {
-      return this.fakeStatisticsService.setStats(new ObjectId(user), { ...fakeStatsDto });
-  }
+    @Patch('/fake')
+    public setStats(@Body() { user, ...fakeStatsDto }: FakeStatsDto) {
+        return this.fakeStatisticsService.setStats(user, { ...fakeStatsDto });
+    }
 }

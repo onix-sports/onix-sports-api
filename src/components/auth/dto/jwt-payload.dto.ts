@@ -5,11 +5,11 @@ import LoginDto from './login.dto';
 
 export default class JwtPayloadDto {
     @ApiProperty({ type: String })
-        _id: ObjectId;
+    _id: ObjectId;
 
     @ApiProperty({ enum: RolesEnum })
-        role: RolesEnum;
+    role: RolesEnum;
 
     @ApiProperty({ type: LoginDto })
-        telegram: LoginDto;
+    telegram: LoginDto;
 }

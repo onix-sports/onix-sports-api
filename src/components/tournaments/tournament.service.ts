@@ -44,8 +44,8 @@ export class TournamentService {
         await Promise.all(promises);
     }
 
-  async closeTournament(id: String) {
-      const performance = await this.statisticsService.getTournamentPerform(new Types.ObjectId(id as string));
+  async closeTournament(id: ObjectId) {
+      const performance = await this.statisticsService.getTournamentPerform(id);
       const [tournament] = await Promise.all([
           this.tournamentRepository.updateById(id, { $set: { status: TournamentStatus.CLOSED, best: new Types.ObjectId(performance.goals[0]._id) } }),
           this.statisticsService.updateTournamentStat(performance.goals[0]._id, true),

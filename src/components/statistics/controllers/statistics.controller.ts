@@ -1,12 +1,12 @@
-import Authorized from '@decorators/authorized.decorator';
 import {
     Controller, Get, Param, Query,
 } from '@nestjs/common';
 import { ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
-import { ParseDatePipe } from '@pipes/date.pipe';
-import { ParseObjectIdPipe } from '@pipes/objectId.pipe';
-import { ObjectIdsPipe } from '@pipes/objectIds.pipe';
-import { ObjectId } from 'mongodb';
+import validationPipe from '@pipes/validation.pipe';
+import { GetLeaderboardDto } from '../dto/get-leaderboard.dto';
+import { GetProfileDto } from '../dto/get-profile.dto';
+import { GetStatsDto } from '../dto/get-stats.dto';
+import { GetTournamentDto } from '../dto/get-tournament.dto';
 import { StatisticsService } from '../services/statistics.service';
 
 @ApiTags('Statistics')
@@ -20,21 +20,14 @@ export class StatisticsController {
     @ApiQuery({ name: 'dateFrom', type: Number, required: false })
     @ApiQuery({ name: 'dateTo', type: Number, required: false })
     @Get('/')
-    public getStats(
-      @Query('ids', ObjectIdsPipe) ids: ObjectId[],
-      @Query('dateFrom', ParseDatePipe) dateFrom: Date,
-      @Query('dateTo', ParseDatePipe) dateTo: Date,
-    ) {
+    public getStats(@Query(validationPipe) { ids, dateFrom, dateTo }: GetStatsDto) {
         return this.statisticService.getStatsPeriod(ids, dateFrom, dateTo);
     }
 
     @ApiQuery({ name: 'dateFrom', type: Number, required: false })
     @ApiQuery({ name: 'dateTo', type: Number, required: false })
     @Get('/leaderboard')
-    public getLeaderboard(
-      @Query('dateFrom', ParseDatePipe) dateFrom: any,
-      @Query('dateTo', ParseDatePipe) dateTo: any,
-    ) {
+    public getLeaderboard(@Query(validationPipe) { dateFrom, dateTo }: GetLeaderboardDto) {
         return this.statisticService.getLeaderboard(dateFrom, dateTo);
     }
 
@@ -43,9 +36,7 @@ export class StatisticsController {
         type: String,
     })
     @Get('/:tournament')
-    public getTournamentStats(
-      @Param('tournament', ParseObjectIdPipe) id: ObjectId,
-    ) {
+    public getTournamentStats(@Param(validationPipe) { id }: GetTournamentDto) {
         return this.statisticService.getTournamentStats(id);
     }
 
@@ -55,8 +46,7 @@ export class StatisticsController {
         required: false,
     })
     @Get('/profile/:id')
-    @Authorized()
-    public async getProfileStats(@Param('id', ParseObjectIdPipe) id: ObjectId) {
+    public async getProfileStats(@Param(validationPipe) { id }: GetProfileDto) {
         return this.statisticService.getProfileStats(id);
     }
 }

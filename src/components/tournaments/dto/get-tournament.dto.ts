@@ -3,7 +3,7 @@ import { Transform } from 'class-transformer';
 import { IsDefined } from 'class-validator';
 import { ObjectId } from 'mongodb';
 
-export class CloseTournamentDto {
+export class GetTournamentDto {
     @ApiProperty({ type: String })
     @IsDefined()
     @Transform(({ value }) => new ObjectId(value))

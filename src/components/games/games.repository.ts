@@ -3,7 +3,7 @@ import {
     FilterQuery, Model, UpdateQuery, UpdateWithAggregationPipeline,
 } from 'mongoose';
 import { ObjectId } from 'mongodb';
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import statisticsConstants from './games-constants';
 import { GameEntity } from './schemas/game.schema';
 import CreateGameDto from './dto/create-game.dto';
@@ -33,7 +33,7 @@ export default class GamesRepository {
         const game = await this.gameModel.findById(id)
             .populate('players stats');
 
-        if (!game) throw new Error('Game was not found');
+        if (!game) throw new NotFoundException('Game was not found');
 
         return game;
     }
