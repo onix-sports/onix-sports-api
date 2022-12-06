@@ -1,17 +1,10 @@
-import { ActionModule } from '@components/action/action.module';
-import { GamesModule } from '@components/games/games.module';
-import { ListenersModule } from '@components/notification-listeners/listeners.module';
-import { NotificationModule } from '@components/notification/notification.module';
-import { StatisticsModule } from '@components/statistics/statistics.module';
-import { TournamentModule } from '@components/tournaments/tournament.module';
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { PuppeteerModule as MainPuppeteerModule } from 'nest-puppeteer';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { MongooseModule } from '@nestjs/mongoose';
-import { SeassonsModule } from '@components/seassons/seassons.module';
 import { ScheduleModule } from '@nestjs/schedule';
-import { AuthModule } from '@components/auth/auth.module';
+import V1Module from '@components/v1/v1.module';
 import { AppService } from './app.service';
 import { AppController } from './app.controller';
 
@@ -20,7 +13,6 @@ import { AppController } from './app.controller';
         ConfigModule.forRoot({
             isGlobal: true,
         }),
-        AuthModule,
         MongooseModule.forRoot(process.env.MONGODB_URL as string, {
             useNewUrlParser: true,
             useUnifiedTopology: true,
@@ -30,13 +22,7 @@ import { AppController } from './app.controller';
         }),
         ScheduleModule.forRoot(),
         MainPuppeteerModule.forRoot(),
-        StatisticsModule,
-        GamesModule,
-        TournamentModule,
-        ActionModule,
-        NotificationModule,
-        ListenersModule,
-        SeassonsModule,
+        V1Module,
     ],
     controllers: [AppController],
     providers: [AppService],

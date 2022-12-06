@@ -1,4 +1,6 @@
 import { AllExceptionsFilter } from '@filters/all-exception.filter';
+import WrapResponseInterceptor from '@interceptors/wrap-response.interceptor';
+import { VersioningType } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import validationPipe from '@pipes/validation.pipe';
@@ -12,6 +14,12 @@ async function bootstrap() {
 
     app.useGlobalFilters(new AllExceptionsFilter());
     app.useGlobalPipes(validationPipe);
+    app.useGlobalInterceptors(new WrapResponseInterceptor());
+
+    app.enableVersioning({
+        type: VersioningType.URI,
+        defaultVersion: '1',
+    });
 
     const config = new DocumentBuilder()
         .setTitle('Onix sports swagger')
