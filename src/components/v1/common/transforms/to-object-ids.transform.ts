@@ -1,3 +1,3 @@
 import { ObjectId } from 'mongodb';
 
-export const toObjectIds = ({ value }: any) => value.map((val: any) => new ObjectId(val));
+export const toObjectIds = ({ value }: any) => [value].flat().map((value) => new ObjectId(value));

@@ -9,6 +9,7 @@ import { GamesGateway } from './games.gateway';
 import { GameProcessService } from './game-process.service';
 import { GamesGatewayDoc } from './games.gateway.doc';
 import { ChatExtention } from './extentions/chat/chat.service';
+import { UsersModule } from '../users/users.module';
 
 @Module({
     imports: [
@@ -19,6 +20,7 @@ import { ChatExtention } from './extentions/chat/chat.service';
                 schema: GameSchema,
             },
         ]),
+        UsersModule,
     ],
     controllers: [GamesController, GamesGatewayDoc],
     providers: [GamesService, GamesRepository, GamesGateway, GameProcessService, ChatExtention],

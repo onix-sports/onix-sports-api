@@ -13,7 +13,7 @@ import { ObjectId } from 'mongodb';
 import { Message, Update } from 'telegraf/typings/core/types/typegram';
 import { setTimeout } from 'timers/promises';
 import { Context } from 'telegraf';
-import { TournamentGenerator } from '@components/v1/tournaments/tournament-generator.service';
+import { TournamentGenerator } from '@components/v1/tournament-generator/tournament-generator.service';
 import { RolesEnum } from '@decorators/roles.decorator';
 import { fourPlayersTemplate } from './templates/4-players.template';
 import { fivePlayersTemplate } from './templates/5-players.template';

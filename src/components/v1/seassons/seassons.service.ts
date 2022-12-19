@@ -1,4 +1,4 @@
-import { LeaderboardEntity } from '@components/v1/common/interfaces/leaderboard-entity.interface';
+import { LeaderboardEntity } from '@components/v1/common/dto/leaderboard-entity.interface';
 import { StatisticsService } from '@components/v1/statistics/services/statistics.service';
 import { Injectable } from '@nestjs/common';
 

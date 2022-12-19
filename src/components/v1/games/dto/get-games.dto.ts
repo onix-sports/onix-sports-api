@@ -1,19 +1,22 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsNumber, IsOptional, IsString } from 'class-validator';
+import { ApiPropertyOptional } from '@nestjs/swagger';
+import { Transform, Type } from 'class-transformer';
+import { IsNumber, IsOptional } from 'class-validator';
+import { ObjectId } from 'mongodb';
 
 export class GetGamesDto {
-    @ApiProperty()
+    @ApiPropertyOptional()
     @IsNumber()
     @IsOptional()
     limit?: number;
 
-    @ApiProperty()
+    @ApiPropertyOptional()
     @IsNumber()
     @IsOptional()
     skip?: number;
 
-    @ApiProperty()
+    @ApiPropertyOptional()
     @IsOptional()
-    @IsString()
-    tournament?: string;
+    @Type(() => String)
+    @Transform(({ value }) => new ObjectId(value))
+    tournament?: ObjectId;
 }

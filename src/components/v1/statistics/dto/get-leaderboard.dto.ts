@@ -1,17 +1,14 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { Transform } from 'class-transformer';
-import { IsDate, IsDefined } from 'class-validator';
+import { ApiPropertyOptional } from '@nestjs/swagger';
+import { IsDate, IsOptional } from 'class-validator';
 
 export class GetLeaderboardDto {
-    @ApiProperty({ type: Number })
-    @IsDefined()
+    @ApiPropertyOptional({ type: Date })
+    @IsOptional()
     @IsDate()
-    @Transform(({ value }) => new Date(value))
     dateFrom: Date;
 
-    @ApiProperty({ type: Number })
-    @IsDefined()
+    @ApiPropertyOptional({ type: Date })
+    @IsOptional()
     @IsDate()
-    @Transform(({ value }) => new Date(value))
     dateTo: Date;
 }

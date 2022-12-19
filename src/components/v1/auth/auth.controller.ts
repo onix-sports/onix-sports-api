@@ -1,7 +1,9 @@
+import { ApiDefaultBadRequestResponse } from '@decorators/api-default-bad-request-response.decorator';
+import { ApiResponse } from '@decorators/api-response.decorator';
 import Authorized from '@decorators/authorized.decorator';
 import RequestUser from '@decorators/request-user.decorator';
 import {
-    Body, Controller, Delete, Post,
+    Body, Controller, Delete, HttpCode, HttpStatus, Post,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ApiTags } from '@nestjs/swagger';
@@ -42,22 +44,55 @@ export class AuthController {
     //   `);
     // }
 
+    @ApiResponse({
+        properties: {
+            type: 'object',
+            properties: {
+                accessToken: {
+                    type: 'string',
+                },
+                refreshToken: {
+                    type: 'string',
+                },
+            },
+        },
+        description: 'Returns jwt tokens',
+    })
+    @ApiDefaultBadRequestResponse()
+    @HttpCode(HttpStatus.OK)
     @Post('/telegram/callback')
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     public telegramCallback(@Body() { hash, authDate, ...payload }: TelegramCallbackDto) {
         return this.authService.login(payload);
     }
 
+    @ApiResponse({
+        properties: {
+            type: 'object',
+            properties: {
+                accessToken: {
+                    type: 'string',
+                },
+            },
+        },
+        description: 'Returns jwt access token',
+    })
+    @ApiDefaultBadRequestResponse()
+    @HttpCode(HttpStatus.CREATED)
     @Post('/refresh-token')
     public refreshToken(@Body() { refreshToken }: RefreshTokenDto) {
         return this.authService.refreshToken(refreshToken);
     }
 
+    @ApiResponse({
+        description: 'no content',
+    })
+    @HttpCode(HttpStatus.NO_CONTENT)
     @Delete('/logout')
     @Authorized()
     public async logout(@RequestUser() user: JwtPayloadDto) {
         await this.authService.logout(user.telegram.id);
 
-        return { message: 'Logged out' };
+        return {};
     }
 }

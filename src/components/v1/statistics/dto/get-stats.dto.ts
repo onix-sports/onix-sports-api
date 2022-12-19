@@ -1,23 +1,24 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { Transform } from 'class-transformer';
-import { IsDate, IsDefined } from 'class-validator';
+import { toObjectIds } from '@components/v1/common/transforms/to-object-ids.transform';
+import { ApiPropertyOptional } from '@nestjs/swagger';
+import { Transform, Type } from 'class-transformer';
+import { IsArray, IsDate, IsOptional } from 'class-validator';
 import { ObjectId } from 'mongodb';
 
 export class GetStatsDto {
-    @ApiProperty({ isArray: true, type: String })
-    @IsDefined()
-    @Transform(({ value }) => value.map((id: string) => new ObjectId(id)))
+    @ApiPropertyOptional({ isArray: true, type: String, description: 'If not passed or array is empty - all users will be included' })
+    @IsOptional()
+    @IsArray()
+    @Type(() => String)
+    @Transform(toObjectIds)
     ids: ObjectId[];
 
-    @ApiProperty({ type: Number })
-    @IsDefined()
+    @ApiPropertyOptional({ type: Date })
+    @IsOptional()
     @IsDate()
-    @Transform(({ value }) => new Date(value))
     dateFrom: Date;
 
-    @ApiProperty({ type: Number })
-    @IsDefined()
+    @ApiPropertyOptional({ type: Date })
+    @IsOptional()
     @IsDate()
-    @Transform(({ value }) => new Date(value))
     dateTo: Date;
 }

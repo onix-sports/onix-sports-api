@@ -6,6 +6,7 @@ import { ObjectId } from 'mongodb';
 import { TournamentConstants as tournamentConstants } from '../tournament.constants';
 import { TournamentStatus } from '../enum/tour-status.enum';
 import { TournamentType } from '../enum/tour-type.enum';
+import { ApiProperty } from '@nestjs/swagger';
 
 export type PollAnswer = {
   data: any;
@@ -34,30 +35,39 @@ export type TelegramData = {
     timestamps: true,
 })
 export class Tournament {
+    @ApiProperty()
     @Prop({ default: 'Tournament' })
     title: string = '';
 
+    @ApiProperty()
     @Prop({ ref: userConstants.models.users, default: [] })
     players: ObjectId[] = [];
 
+    @ApiProperty()
     @Prop({ ref: gamesConstants.models.games, default: [] })
     games: ObjectId[] = [];
 
+    @ApiProperty()
     @Prop({ default: TournamentStatus.OPENED })
     status: TournamentStatus;
 
+    @ApiProperty()
     @Prop({ required: false })
     type: TournamentType;
 
+    @ApiProperty()
     @Prop({})
     best: Types.ObjectId;
 
+    @ApiProperty()
     @Prop({ type: {} as Poll | null, default: null })
     poll: Poll | null;
 
+    @ApiProperty()
     @Prop({ type: {} as Types.ObjectId | null, default: null })
     respected: Types.ObjectId | null;
 
+    @ApiProperty()
     @Prop({ type: {} as Poll | null, default: null })
     telegram: TelegramData | null;
 }

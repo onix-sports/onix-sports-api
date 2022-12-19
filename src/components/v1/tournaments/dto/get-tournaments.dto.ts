@@ -1,20 +1,20 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsDefined, IsEnum, IsNumber } from 'class-validator';
+import { ApiPropertyOptional } from '@nestjs/swagger';
+import { IsEnum, IsNumber, IsOptional } from 'class-validator';
 import { TournamentStatus } from '../enum/tour-status.enum';
 
 export class GetTournamentsDto {
-    @ApiProperty({ enum: TournamentStatus })
-    @IsDefined()
+    @ApiPropertyOptional({ enum: TournamentStatus })
+    @IsOptional()
     @IsEnum(TournamentStatus)
     status: TournamentStatus;
 
-    @ApiProperty({ type: Number })
-    @IsDefined()
+    @ApiPropertyOptional({ type: Number })
+    @IsOptional()
     @IsNumber()
     skip: number;
 
-    @ApiProperty({ type: Number })
-    @IsDefined()
+    @ApiPropertyOptional({ type: Number })
+    @IsOptional()
     @IsNumber()
     limit: number;
 }

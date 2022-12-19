@@ -15,7 +15,7 @@ export class FakeStatisticsRepository {
         return this.fakeStatisticsModel.findOneAndUpdate({ user }, { $set }, { upsert: true, new: true });
     }
 
-    public getStats(users: any[]) {
-        return this.fakeStatisticsModel.find({ user: { $in: users }, enabled: true });
+    public getStats() {
+        return this.fakeStatisticsModel.find({ enabled: true });
     }
 }

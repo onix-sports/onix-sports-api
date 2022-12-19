@@ -13,7 +13,7 @@ export class FakeStatisticsService {
         return this.fakeStatisticsRepository.setStats(user, { ...update, user });
     }
 
-    public getStats(users: any[]) {
-        return this.fakeStatisticsRepository.getStats(users);
+    public getStats() {
+        return this.fakeStatisticsRepository.getStats();
     }
 }

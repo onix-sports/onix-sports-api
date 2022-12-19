@@ -1,6 +1,7 @@
 import { StringObjectId } from '@components/v1/common/types/string-objectid.type';
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
+import { ObjectId } from 'mongodb';
 import {
     FilterQuery, Model, UpdateQuery, UpdateWithAggregationPipeline,
 } from 'mongoose';
@@ -21,13 +22,19 @@ export class TournamentRepository {
 
     getAll({ skip, limit, status }: any = { skip: 0, limit: 0 }) {
         return this.tournamentModel
-            .find({ status })
+            .find({
+                ...(status && { status }),
+            })
             .sort({ createdAt: -1 })
             .skip(skip)
             .limit(limit);
     }
 
-    async getById(id: StringObjectId) {
+    get(query: FilterQuery<TournamentDocument>) {
+        return this.tournamentModel.find(query);
+    }
+
+    async getById(id: ObjectId) {
         const tournament = this.tournamentModel.findById(id);
 
         if (!tournament) throw new Error('Tournament not found');
@@ -45,5 +52,9 @@ export class TournamentRepository {
 
     countDocuments(filter: FilterQuery<TournamentDocument>) {
         return this.tournamentModel.countDocuments(filter);
+    }
+
+    deleteById(id: ObjectId) {
+        return this.tournamentModel.findByIdAndDelete(id);
     }
 }

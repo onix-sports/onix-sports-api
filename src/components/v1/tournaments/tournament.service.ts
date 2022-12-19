@@ -1,9 +1,7 @@
-import { StringObjectId } from '@components/v1/common/types/string-objectid.type';
 import { GameEntity } from '@components/v1/games/schemas/game.schema';
 import { Injectable } from '@nestjs/common';
 import { OnEvent, EventEmitter2 } from '@nestjs/event-emitter';
 import { StatisticsService } from '@components/v1/statistics/services/statistics.service';
-import { Types } from 'mongoose';
 import { ObjectId } from 'mongodb';
 import { CreateTournamentDto } from './dto/create-tournament.dto';
 import { TournamentStatus } from './enum/tour-status.enum';
@@ -13,10 +11,10 @@ import { Poll, TelegramData } from './schemas/tournament.schema';
 @Injectable()
 export class TournamentService {
     constructor(
-    private readonly statisticsService: StatisticsService,
-    private readonly tournamentRepository: TournamentRepository,
-    private readonly eventEmitter: EventEmitter2,
-    ) {}
+        private readonly statisticsService: StatisticsService,
+        private readonly tournamentRepository: TournamentRepository,
+        private readonly eventEmitter: EventEmitter2,
+    ) { }
 
     create(tournament: CreateTournamentDto) {
         return this.tournamentRepository.create(tournament);
@@ -26,11 +24,16 @@ export class TournamentService {
         return this.tournamentRepository.getAll(query);
     }
 
-    getOne(id: StringObjectId) {
+    getOne(id: ObjectId) {
         return this.tournamentRepository.getById(id);
     }
 
-  @OnEvent('games.created', { async: true })
+    @OnEvent('tournaments.find')
+    find({ tournaments }: { tournaments: ObjectId[] }) {
+        return this.tournamentRepository.get({ _id: { $in: tournaments } });
+    }
+
+    @OnEvent('games.created', { async: true })
     async pushGames({ games }: { games: GameEntity[] }) {
         const _games = Array.isArray(games) ? games : [games];
         const promises = _games.map(({ tournament, _id, players }) => this.tournamentRepository.updateOne({
@@ -44,35 +47,45 @@ export class TournamentService {
         await Promise.all(promises);
     }
 
-  async closeTournament(id: ObjectId) {
-      const performance = await this.statisticsService.getTournamentPerform(id);
-      const [tournament] = await Promise.all([
-          this.tournamentRepository.updateById(id, { $set: { status: TournamentStatus.CLOSED, best: new Types.ObjectId(performance.goals[0]._id) } }),
-          this.statisticsService.updateTournamentStat(performance.goals[0]._id, true),
-      ]);
+    async closeTournament(id: ObjectId) {
+        const performance = await this.statisticsService.getTournamentPerform(id);
 
-      await this.eventEmitter.emitAsync('tournament.closed', { performance, tournament });
+        if (performance.goals.length === 0) {
+            return this.tournamentRepository.deleteById(id).then(() => ({
+                message: 'Tournament was deleted because of no played games',
+            }));
+        }
 
-      return tournament;
-  }
+        const [tournament] = await Promise.all([
+            this.tournamentRepository.updateById(
+                id,
+                { $set: { status: TournamentStatus.CLOSED, best: new ObjectId(performance.goals[0]._id) } },
+            ),
+            this.statisticsService.updateTournamentStat(performance.goals[0]._id, true),
+        ]);
 
-  setTelegramData(id: ObjectId, telegram: TelegramData) {
-      return this.tournamentRepository.updateById(id, { $set: { telegram } });
-  }
+        await this.eventEmitter.emitAsync('tournament.closed', { performance, tournament });
 
-  createPoll(id: ObjectId, poll: Poll) {
-      return this.tournamentRepository.updateById(id, { $set: { poll } });
-  }
+        return tournament;
+    }
 
-  votePoll(pollId: string, user: ObjectId, answer: number) {
-      return this.tournamentRepository.updateOne({ 'poll.id': pollId }, { $push: { [`poll.results.${answer}`]: user } });
-  }
+    setTelegramData(id: ObjectId, telegram: TelegramData) {
+        return this.tournamentRepository.updateById(id, { $set: { telegram } });
+    }
 
-  setRespected(id: ObjectId, user: ObjectId | null) {
-      return this.tournamentRepository.updateById(id, { $set: { respected: user, 'poll.closed': true } });
-  }
+    createPoll(id: ObjectId, poll: Poll) {
+        return this.tournamentRepository.updateById(id, { $set: { poll } });
+    }
 
-  getRespectedCount(user: ObjectId) {
-      return this.tournamentRepository.countDocuments({ respected: user });
-  }
+    votePoll(pollId: string, user: ObjectId, answer: number) {
+        return this.tournamentRepository.updateOne({ 'poll.id': pollId }, { $push: { [`poll.results.${answer}`]: user } });
+    }
+
+    setRespected(id: ObjectId, user: ObjectId | null) {
+        return this.tournamentRepository.updateById(id, { $set: { respected: user, 'poll.closed': true } });
+    }
+
+    getRespectedCount(user: ObjectId) {
+        return this.tournamentRepository.countDocuments({ respected: user });
+    }
 }

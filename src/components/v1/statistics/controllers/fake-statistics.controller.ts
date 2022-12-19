@@ -1,30 +1,48 @@
 import {
-    Body, Controller, Get, Patch, Query,
+    Body, Controller, Get, HttpCode, HttpStatus, Patch,
 } from '@nestjs/common';
-import { ApiQuery, ApiTags } from '@nestjs/swagger';
-import validationPipe from '@pipes/validation.pipe';
-import { GetFakeStatsDto } from '../dto/get-fake-stats.dto';
+import { ApiExtraModels, ApiTags, getSchemaPath } from '@nestjs/swagger';
+import { ApiDefaultBadRequestResponse } from '@decorators/api-default-bad-request-response.decorator';
+import { ApiResponse } from '@decorators/api-response.decorator';
+import { SchemaObject } from '@nestjs/swagger/dist/interfaces/open-api-spec.interface';
 import FakeStatsDto from '../dto/set-fake-stats.dto';
 import { FakeStatisticsService } from '../services/fake-statistics.service';
+import { FakeStatistic } from '../schemas/fake-statistics.schema';
 
 @ApiTags('Fake statistics')
-@Controller('statistics')
+@ApiExtraModels(FakeStatistic)
+@Controller('fake-statistics')
 export class FakeStatisticsController {
     constructor(
     private readonly fakeStatisticsService: FakeStatisticsService,
     ) {}
 
-    @Get('/fake')
-    @ApiQuery({
-        name: 'users',
-        type: String,
-        isArray: true,
+    @ApiResponse({
+        properties: {
+            type: 'array',
+            items: {
+                type: 'object',
+                $ref: getSchemaPath(FakeStatistic),
+            },
+        },
+        description: 'Returns fake statistics',
     })
-    public getStats(@Query(validationPipe) { users }: GetFakeStatsDto) {
-        return this.fakeStatisticsService.getStats(users);
+    @HttpCode(HttpStatus.OK)
+    @Get('/')
+    public getStats() {
+        return this.fakeStatisticsService.getStats();
     }
 
-    @Patch('/fake')
+    @ApiResponse({
+        properties: {
+            type: 'object',
+            $ref: getSchemaPath(FakeStatistic),
+        } as SchemaObject,
+        description: 'Sets fake statistics for user',
+    })
+    @ApiDefaultBadRequestResponse()
+    @HttpCode(HttpStatus.OK)
+    @Patch('/')
     public setStats(@Body() { user, ...fakeStatsDto }: FakeStatsDto) {
         return this.fakeStatisticsService.setStats(user, { ...fakeStatsDto });
     }

@@ -1,11 +1,11 @@
 import { GameInfo } from '@components/v1/games/core/interfaces/game-info.interface';
 import { GamesService } from '@components/v1/games/games.service';
 import { Game } from '@components/v1/games/core/game.class';
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { ObjectId } from 'mongodb';
 import _ from 'lodash';
-import { LeaderboardEntity } from '@components/v1/common/interfaces/leaderboard-entity.interface';
+import { LeaderboardEntity } from '@components/v1/common/dto/leaderboard-entity.interface';
 import { pipe } from '@components/v1/common/utils/pipe';
 import { lessThan } from '@components/v1/common/utils/less-than';
 import { GameStatus } from '@components/v1/games/enum/game-status.enum';
@@ -135,7 +135,7 @@ export class StatisticsService {
       });
   }
 
-  public getStatsPeriod(ids: ObjectId[], dateFrom?: Date, dateTo?: Date) {
+  public getStatsPeriod(ids?: ObjectId[], dateFrom?: Date, dateTo?: Date) {
       return this.statisticRepository.getStatsPeriod(ids, dateFrom, dateTo);
   }
 
@@ -215,7 +215,7 @@ export class StatisticsService {
 
   public async getLeaderboard(dateFrom?: Date, dateTo?: Date): Promise<LeaderboardEntity[]> {
       let stats = await this.statisticRepository.getStatsPeriod([], dateFrom, dateTo);
-      const fakeStats = await this.fakeStatisticService.getStats(stats.map(({ _id }) => new ObjectId(_id)));
+      const fakeStats = await this.fakeStatisticService.getStats();
 
       stats = stats.map((stat) => {
           return fakeStats.find(({ user }) => user.equals(stat._id)) || stat;
@@ -237,9 +237,9 @@ export class StatisticsService {
           .filter(({ _id }) => !participiants.find(({ _id: id }) => id.equals(_id)))
           .map((guest) => ({
               ...guest,
-              wScore: '-',
-              gScore: '-',
-              score: '-',
+              wScore: 0,
+              gScore: 0,
+              score: 0,
               isGuest: true,
           }));
 
@@ -258,7 +258,7 @@ export class StatisticsService {
       const _stats = await this.profileStatisticsRepository.getByUserId(id);
 
       if (!_stats) {
-          throw new Error('Profile statistics not found');
+          throw new NotFoundException('Profile statistics not found');
       }
 
       /** Temp solution */

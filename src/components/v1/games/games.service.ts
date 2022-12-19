@@ -1,7 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { ObjectId } from 'mongodb';
 import { FilterQuery } from 'mongoose';
+import { TournamentDocument } from '../tournaments/schemas/tournament.schema';
+import { UserEntity } from '../users/schemas/user.schema';
+import UsersRepository from '../users/users.repository';
 import CreateGamesDto from './dto/create-game.dto';
 import GamesRepository from './games.repository';
 import { GameEntity } from './schemas/game.schema';
@@ -9,12 +12,62 @@ import { GameEntity } from './schemas/game.schema';
 @Injectable()
 export class GamesService {
     constructor(
-    private readonly gamesRepository: GamesRepository,
+        private readonly gamesRepository: GamesRepository,
+        private readonly usersRepository: UsersRepository,
 
-    private readonly eventEmitter: EventEmitter2,
-    ) {}
+        private readonly eventEmitter: EventEmitter2,
+    ) { }
+
+    private async checkTournaments(_games: CreateGamesDto[] | CreateGamesDto) {
+        const tournaments = [_games]
+            .flat()
+            .filter(({ tournament }) => tournament)
+            .map(({ tournament }) => tournament!);
+
+        // eventEmmiter is needed to avoid circular dependency. @TODO: find a better solution
+        const [foundTournaments] = await this.eventEmitter.emitAsync('tournaments.find', { tournaments });
+
+        tournaments.forEach((id: ObjectId) => {
+            const ids = foundTournaments.map(({ _id }: TournamentDocument) => _id.toString());
+
+            if (!ids.includes(id.toString())) {
+                throw new NotFoundException(`Tournament with id ${id} was not found`);
+            }
+        });
+    }
+
+    private async checkPlayers(_games: CreateGamesDto[] | CreateGamesDto) {
+        const games = [_games]
+            .flat()
+            .map(({ players }) => ({ players }));
+
+        const promises = games.map(({ players }) => {
+            const ids = players.map((id: ObjectId) => id.toString());
+
+            if (ids.length !== new Set(ids).size) {
+                throw new BadRequestException('Players must be unique');
+            }
+
+            return this.usersRepository
+                .get({ _id: { $in: ids } })
+                .then((foundPlayers: UserEntity[]) => {
+                    ids.forEach((id) => {
+                        const ids = foundPlayers.map(({ _id }: UserEntity) => _id.toString());
+
+                        if (!ids.includes(id.toString())) {
+                            throw new NotFoundException(`Player with id ${id} was not found`);
+                        }
+                    });
+                });
+        });
+
+        return Promise.all(promises);
+    }
 
     public async createGames(_games: CreateGamesDto[] | CreateGamesDto, select?: any) {
+        await this.checkTournaments(_games);
+        await this.checkPlayers(_games);
+
         const games = await this.gamesRepository.create(_games, select);
 
         await this.eventEmitter.emitAsync('games.created', { games });
