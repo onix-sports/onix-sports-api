@@ -14,6 +14,7 @@ import { AppService } from './app.service';
 import { SeassonsModule } from '@components/seassons/seassons.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { AuthModule } from '@components/auth/auth.module';
+import { StoriesModule } from '@components/stories/stories.module';
 
 @Module({
   imports: [
@@ -37,6 +38,7 @@ import { AuthModule } from '@components/auth/auth.module';
     NotificationModule,
     ListenersModule,
     SeassonsModule,
+    StoriesModule
   ],
   controllers: [AppController],
   providers: [AppService],
