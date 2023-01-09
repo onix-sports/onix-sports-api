@@ -9,6 +9,7 @@ import { ConfigService } from '@nestjs/config';
 import { ApiForbiddenResponse, ApiTags } from '@nestjs/swagger';
 import validationPipe from '@pipes/validation.pipe';
 import TelegramVerifiedGuard from '@guards/telegram-verified.guard';
+import DebugResponse from '@decorators/debug-response.decorator';
 import { AuthService } from './auth.service';
 import JwtPayloadDto from './dto/jwt-payload.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
@@ -98,6 +99,7 @@ export class AuthController {
     })
     @HttpCode(HttpStatus.OK)
     @UseGuards(TelegramVerifiedGuard)
+    @DebugResponse(true)
     @Post('/telegram/callback')
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     public telegramCallback(@Body() { hash, authDate, ...payload }: TelegramCallbackDto) {

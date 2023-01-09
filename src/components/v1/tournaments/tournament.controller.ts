@@ -1,5 +1,7 @@
 import { ApiDefaultBadRequestResponse } from '@decorators/api-default-bad-request-response.decorator';
 import { ApiResponse } from '@decorators/api-response.decorator';
+import Authorized from '@decorators/authorized.decorator';
+import { RolesEnum } from '@decorators/roles.decorator';
 import {
     Body, Controller, Get, HttpCode, HttpStatus, Param, Patch, Post, Query,
 } from '@nestjs/common';
@@ -30,6 +32,7 @@ export class TournamentController {
     })
     @ApiDefaultBadRequestResponse()
     @HttpCode(HttpStatus.CREATED)
+    @Authorized(RolesEnum.admin)
     @Post('/')
     public createTournament(@Body() tournament: CreateTournamentDto) {
         return this.tournamentService.create(tournament);
@@ -44,6 +47,7 @@ export class TournamentController {
     })
     @ApiDefaultBadRequestResponse()
     @HttpCode(HttpStatus.OK)
+    @Authorized(RolesEnum.admin)
     @Patch('/close')
     public closeTournament(@Body() { id }: CloseTournamentDto) {
         return this.tournamentService.closeTournament(id);
