@@ -1,6 +1,8 @@
 import { ApiDefaultBadRequestResponse } from '@decorators/api-default-bad-request-response.decorator';
 import { ApiDefaultNotFoundResponse } from '@decorators/api-default-not-found-response.decorator';
 import { ApiResponse } from '@decorators/api-response.decorator';
+import Authorized from '@decorators/authorized.decorator';
+import { RolesEnum } from '@decorators/roles.decorator';
 import {
     Body, Controller, Get, HttpCode, HttpStatus, Param, Post, Query,
 } from '@nestjs/common';
@@ -52,6 +54,7 @@ export class GamesController {
         `Player with id ${new ObjectId()} was not found`,
     ])
     @HttpCode(HttpStatus.CREATED)
+    @Authorized(RolesEnum.admin)
     @Post('/')
     public async createGames(@Body() gamesDto: CreateGamesDto) {
         return this.gameService.createGames(gamesDto);

@@ -6,6 +6,8 @@ import {
 import { ApiExtraModels, ApiTags, getSchemaPath } from '@nestjs/swagger';
 import { ApiDefaultNotFoundResponse } from '@decorators/api-default-not-found-response.decorator';
 import { ObjectId } from 'mongodb';
+import Authorized from '@decorators/authorized.decorator';
+import { RolesEnum } from '@decorators/roles.decorator';
 import { GenerateTournamentDto } from './dto/generate-tournament.dto';
 import { Tournament } from '../tournaments/schemas/tournament.schema';
 import { TournamentGenerator } from './tournament-generator.service';
@@ -39,6 +41,7 @@ export class TournamentGeneratorController {
     @ApiDefaultBadRequestResponse()
     @ApiDefaultNotFoundResponse(`Player with id ${new ObjectId()} was not found`)
     @HttpCode(HttpStatus.CREATED)
+    @Authorized(RolesEnum.admin)
     @Post('/generate')
     public generateTournament(@Body() { title, players }: GenerateTournamentDto) {
         return this.tournamentGenerator.generate(players, title);

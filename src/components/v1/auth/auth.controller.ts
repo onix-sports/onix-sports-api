@@ -3,14 +3,18 @@ import { ApiResponse } from '@decorators/api-response.decorator';
 import Authorized from '@decorators/authorized.decorator';
 import RequestUser from '@decorators/request-user.decorator';
 import {
-    Body, Controller, Delete, HttpCode, HttpStatus, Post,
+    Body, Controller, Delete, Get, HttpCode, HttpStatus, Post, Query, Res, UseGuards,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiForbiddenResponse, ApiTags } from '@nestjs/swagger';
+import validationPipe from '@pipes/validation.pipe';
+import TelegramVerifiedGuard from '@guards/telegram-verified.guard';
+import DebugResponse from '@decorators/debug-response.decorator';
 import { AuthService } from './auth.service';
 import JwtPayloadDto from './dto/jwt-payload.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import TelegramCallbackDto from './dto/telegram-callback.dto';
+import TelegramSignInDto from './dto/telegram-sign-in.dto';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -20,29 +24,52 @@ export class AuthController {
     private readonly configService: ConfigService,
     ) {}
 
-    // @Get('/telegram/sign-in')
-    // public async telegramSignIn(@Res() response: any) {
-    //   const [botId] = this.configService.get<string>('TELEGRAM_API_KEY')!.split(':');
+    @ApiResponse({
+        description: 'Returns page with telegram login button',
+    })
+    @ApiDefaultBadRequestResponse()
+    @HttpCode(HttpStatus.OK)
+    @Get('/telegram/sign-in')
+    public async telegramSignIn(
+        @Query(validationPipe) { redirect }: TelegramSignInDto,
+        @Res() response: any,
+    ) {
+        return response.send(`
+        <body>
+          <style>
+              body {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                background-color: #54a9eb94;
+              }
+            
+              iframe {
+                transform: scale(5);
+              }
+          </style>
 
-    //   return response.send(`
-    //     <body>
-    //       <script src="https://telegram.org/js/telegram-widget.js?21" data-telegram-login="${this.configService.get<string>('BOT_USERNAME')}"
-    //       data-size="medium" data-radius="0" data-auth-url="/auth/telegram/callback" data-request-access="write"></script>
+          <script src="https://telegram.org/js/telegram-widget.js?21" data-telegram-login="${this.configService.get<string>('BOT_USERNAME')}"
+          data-size="medium" data-radius="0" data-onauth="onTelegramAuth(user)" data-request-access="write"></script>
 
-    //       <script>
-    //         window.Telegram.Login.auth({ bot_id: '${botId}', request_access: true }, (data) => {
-    //           fetch('/auth/telegram/callback', {
-    //               method: 'POST',
-    //               body: JSON.stringify(data),
-    //               headers: {
-    //                   'Content-type': 'application/json'
-    //               }
-    //           });
-    //         })
-    //       </script>
-    //     </body>
-    //   `);
-    // }
+          <script>
+            function onTelegramAuth(data) {
+                fetch('/v1/auth/telegram/callback', {
+                      method: 'POST',
+                      body: JSON.stringify(data),
+                      headers: {
+                          'Content-type': 'application/json'
+                      }
+                })
+                .then(response => response.json())
+                .then(({ data }) => {
+                    window.location.href = \`${redirect}?accessToken=\${data.accessToken}&refreshToken=\${data.refreshToken}\`;
+                });
+            }
+          </script>
+        </body>
+      `);
+    }
 
     @ApiResponse({
         properties: {
@@ -59,7 +86,20 @@ export class AuthController {
         description: 'Returns jwt tokens',
     })
     @ApiDefaultBadRequestResponse()
+    @ApiForbiddenResponse({
+        description: 'If request is not from telegram',
+        schema: {
+            example: {
+                statusCode: HttpStatus.FORBIDDEN,
+                timestamp: new Date().toISOString(),
+                path: '/v1/auth/telegram/callback',
+                message: 'Forbidden resource',
+            },
+        },
+    })
     @HttpCode(HttpStatus.OK)
+    @UseGuards(TelegramVerifiedGuard)
+    @DebugResponse(true)
     @Post('/telegram/callback')
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     public telegramCallback(@Body() { hash, authDate, ...payload }: TelegramCallbackDto) {
