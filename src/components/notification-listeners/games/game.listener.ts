@@ -1,12 +1,17 @@
+import { Injectable } from "@nestjs/common";
+import { OnEvent } from "@nestjs/event-emitter";
+import { ObjectId } from 'mongodb';
+
 import { GameInfo } from "@components/games/core/interfaces/game-info.interface";
 import { GamesService } from "@components/games/games.service";
 import { NotificationListener } from "@components/notification/abstract/notification-listener.absctract";
 import { NotificationService } from "@components/notification/notification.service";
-import { Injectable } from "@nestjs/common";
-import { OnEvent } from "@nestjs/event-emitter";
-import { ObjectId } from 'mongodb';
+import { StoryTypeEnum } from "@components/stories/enums/story-type.enum";
+import { StoriesService } from "@components/stories/stories.service";
+
 import { gameFinishedTemplate } from "./templates/game-finished.template";
 import { gameStartedTemplate } from "./templates/game-started.template";
+
 
 @Injectable()
 export class GameListener extends NotificationListener {
@@ -14,6 +19,7 @@ export class GameListener extends NotificationListener {
     readonly notificationService: NotificationService,
     
     private readonly gameService: GamesService,
+    private readonly storiesService: StoriesService,
   ) {
     super(notificationService);
   }
@@ -34,15 +40,19 @@ export class GameListener extends NotificationListener {
   async handleGameStart({ id }: { id: string }) {
     const { players, _id } = await this.gameService.getGameInfo(new ObjectId(id));
 
+    await this.storiesService.create({ content: { players, _id }, type: StoryTypeEnum.startGame })
+
     this.notificationService.sendToMain(...gameStartedTemplate({ players, _id }));
   }
 
   @OnEvent('game.finished')
-  handleGameFinish({ id, info }: { id: string, info: GameInfo }) {
+  async handleGameFinish({ id, info }: { id: string, info: GameInfo }) {
     this.notify['notify_on_end'].forEach((chatId) => {
       this.notificationService.send(chatId as Number, ...gameFinishedTemplate(info));
 
       this.notify['notify_on_end'].delete(chatId);
     });
+
+    await this.storiesService.create({ content: { id, info }, type: StoryTypeEnum.finishGame  })
   }
 }

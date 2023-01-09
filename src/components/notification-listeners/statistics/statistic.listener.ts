@@ -2,6 +2,9 @@ import { NotificationListener } from "@components/notification/abstract/notifica
 import { NotificationService } from "@components/notification/notification.service";
 import { Injectable } from "@nestjs/common";
 import { OnEvent } from "@nestjs/event-emitter";
+import { StoriesService } from "@components/stories/stories.service";
+import { StoryTypeEnum } from "@components/stories/enums/story-type.enum";
+
 import { tournamentPerformTemplate } from "./templates/tournament-perform.template";
 import { Markup } from "telegraf";
 
@@ -9,6 +12,7 @@ import { Markup } from "telegraf";
 export class StatisticListener extends NotificationListener {
   constructor(
     readonly notificationService: NotificationService,
+    private readonly storiesService: StoriesService,
   ) {
     super(notificationService);
   }
@@ -27,6 +31,8 @@ export class StatisticListener extends NotificationListener {
       goals: goals[0].goals,
       goalsPercent: goals[0].goals / totalGoals * 100
     });
+
+    await this.storiesService.create({ content: { goals, totalGoals }, type: StoryTypeEnum.bestPerformer  })
 
     await this.notificationService.sendHtmlToMain(html, { 
       caption, 

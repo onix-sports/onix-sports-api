@@ -1,3 +1,9 @@
+import { Injectable, Logger } from "@nestjs/common";
+import { OnEvent } from "@nestjs/event-emitter";
+import { ObjectId } from 'mongodb';
+import _ from "lodash";
+import { Context } from "telegraf";
+
 import { NotificationListener } from "@components/notification/abstract/notification-listener.absctract";
 import { MatchedContext, NotificationMessage } from "@components/notification/interfaces/notification-message.interface";
 import { NotificationService } from "@components/notification/notification.service";
@@ -7,10 +13,10 @@ import { PollAnswer, TournamentDocument } from "@components/tournaments/schemas/
 import { TournamentService } from "@components/tournaments/tournament.service";
 import { UserEntity } from "@components/users/schemas/user.schema";
 import { UsersService } from "@components/users/users.service";
-import { Injectable, Logger } from "@nestjs/common";
-import { OnEvent } from "@nestjs/event-emitter";
-import { ObjectId } from 'mongodb';
-import _ from "lodash";
+import { RolesEnum } from "@decorators/roles.decorator";
+import { StoriesService } from "@components/stories/stories.service";
+import { TournamentGenerator } from "@components/tournaments/tournament-generator.service";
+
 import { fourPlayersTemplate } from "./templates/4-players.template";
 import { fivePlayersTemplate } from "./templates/5-players.template";
 import { sixPlayersTemplate } from "./templates/6-players.template";
@@ -18,9 +24,7 @@ import { eightPlayersTemplate } from "./templates/8-players.template";
 import { Message, Update } from "telegraf/typings/core/types/typegram";
 import { setTimeout } from 'timers/promises';
 import { respectedPlayerTemplate } from "./templates/respected.template";
-import { Context } from "telegraf";
-import { TournamentGenerator } from "@components/tournaments/tournament-generator.service";
-import { RolesEnum } from "@decorators/roles.decorator";
+import { StoryTypeEnum } from "@components/stories/enums/story-type.enum";
 
 @Injectable()
 export class TournamentListener extends NotificationListener {
@@ -29,6 +33,7 @@ export class TournamentListener extends NotificationListener {
     private readonly statisticService: StatisticsService,
     private readonly tournamentService: TournamentService,
     private readonly userService: UsersService,
+    private readonly storiesService: StoriesService,
     private readonly tournamentGenerator: TournamentGenerator,
   ) {
     super(notificationService);
@@ -148,7 +153,12 @@ export class TournamentListener extends NotificationListener {
 
     const _teams = await this.statisticService.getTeamsWinChance(teams, 50);
     const html = this.templates[tournament.type]({ players, teams: _teams, tournament });
-    const message = await this.notificationService.sendHtmlToMain(html);
+    console.log('_teams :>> ', _teams);
+    console.log('tournament :>> ', tournament);
+    const [ message ] = await Promise.all([
+      this.notificationService.sendHtmlToMain(html),
+      this.storiesService.create({ content: { players, teams: _teams, tournament }, type: StoryTypeEnum.newTournament  })
+    ])
 
     if (message) {
       await this.tournamentService.setTelegramData(tournament._id, { messageId: message.message_id, chatId: message.chat.id });

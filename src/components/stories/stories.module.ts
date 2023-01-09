@@ -1,6 +1,8 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 
+import { UsersModule } from '@components/users/users.module';
+
 import { StoriesController } from './stories.controller';
 import { StoriesService } from './stories.service';
 import { storiesConstants } from './stories-constants';
@@ -10,6 +12,7 @@ import { StoriesGateway } from './stories.gateway';
 
 @Module({
   imports: [
+    UsersModule,
     MongooseModule.forFeature([
       {
         name: storiesConstants.models.stories,

@@ -11,14 +11,26 @@ export interface ILastStoriesOpt {
     type?: StoryTypeEnum
 }
 
+export interface IPagStoriesOpt extends ILastStoriesOpt {
+    skip: number
+}
 export interface IParseCursorQueryOpt {
     cursorId: ObjectId,
     type?: StoryTypeEnum,
     page: CursorPageEnum
 }
 
+export interface IGetByCursorQueryOpt extends IParseCursorQueryOpt {
+    limit: number,
+    userId: ObjectId,
+}
+
 export interface IGetByCursorOpt {
     filter: FilterQuery<StoryEntity>
     userId: ObjectId, 
     limit: number,
+}
+
+export interface IGetPagByQuery extends IGetByCursorOpt {
+    skip: number
 }

@@ -1,4 +1,5 @@
 import { Module } from "@nestjs/common";
+
 import { GameListenerModule } from "./games/game-listener.module";
 import { StatisticListenerModule } from "./statistics/statistic-listener.module";
 import { TournamentListenerModule } from "./tournaments/tournament-listener.module";
