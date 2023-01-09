@@ -1,7 +1,9 @@
 import { toObjectIds } from '@components/v1/common/transforms/to-object-ids.transform';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform, Type } from 'class-transformer';
-import { ArrayMinSize, IsArray, IsOptional, IsString } from 'class-validator';
+import {
+    ArrayMinSize, IsArray, IsOptional, IsString,
+} from 'class-validator';
 import { ObjectId } from 'mongodb';
 
 export class GenerateTournamentDto {

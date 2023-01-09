@@ -20,8 +20,6 @@ export class AllExceptionsFilter implements ExceptionFilter {
             ? exception.getStatus()
             : HttpStatus.INTERNAL_SERVER_ERROR;
 
-        console.log(exception);
-
         this.logger.error(exception);
 
         response.status(status).json({

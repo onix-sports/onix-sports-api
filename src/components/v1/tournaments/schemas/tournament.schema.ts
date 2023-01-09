@@ -3,10 +3,10 @@ import userConstants from '@components/v1/users/user-constants';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
 import { ObjectId } from 'mongodb';
+import { ApiProperty } from '@nestjs/swagger';
 import { TournamentConstants as tournamentConstants } from '../tournament.constants';
 import { TournamentStatus } from '../enum/tour-status.enum';
 import { TournamentType } from '../enum/tour-type.enum';
-import { ApiProperty } from '@nestjs/swagger';
 
 export type PollAnswer = {
   data: any;
