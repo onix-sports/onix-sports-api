@@ -31,7 +31,7 @@ export class Player {
     constructor({
         _id, name, team, position,
     }: any) {
-        this._id = _id;
+        this._id = _id.toString();
         this.name = name;
         this.mGoals = 0;
         this.rGoals = 0;

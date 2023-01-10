@@ -49,7 +49,7 @@ export class StatisticsService {
             return players[2];
         };
         const stats = info.players.map((player, index, players) => ({
-            user: player._id,
+            user: new ObjectId(player._id),
             mGoals: player.mGoals,
             rGoals: player.rGoals,
             amGoals: player.amGoals,

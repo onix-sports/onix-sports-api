@@ -36,12 +36,13 @@ export class TournamentService {
     @OnEvent('games.created', { async: true })
     async pushGames({ games }: { games: GameEntity[] }) {
         const _games = Array.isArray(games) ? games : [games];
+
         const promises = _games.map(({ tournament, _id, players }) => this.tournamentRepository.updateOne({
             _id: tournament,
             status: TournamentStatus.OPENED,
         }, {
             $push: { games: _id },
-            $addToSet: { players: players.map(({ _id }: any) => _id) },
+            $addToSet: { players: { $each: players.map(({ _id }: any) => _id) } },
         }));
 
         await Promise.all(promises);
