@@ -7,6 +7,7 @@ import { CreateTournamentDto } from './dto/create-tournament.dto';
 import { TournamentStatus } from './enum/tour-status.enum';
 import { TournamentRepository } from './tournament.repository';
 import { Poll, TelegramData } from './schemas/tournament.schema';
+import { TournamentType } from './enum/tour-type.enum';
 
 @Injectable()
 export class TournamentService {
@@ -88,5 +89,9 @@ export class TournamentService {
 
     getRespectedCount(user: ObjectId) {
         return this.tournamentRepository.countDocuments({ respected: user });
+    }
+
+    makeCustom(id: ObjectId) {
+        return this.tournamentRepository.updateById(id, { $set: { type: TournamentType.CUSTOM } });
     }
 }

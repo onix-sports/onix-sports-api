@@ -17,6 +17,9 @@ import { FourPlayersTournament } from './tournaments/4-players.tournament';
 import { FivePlayersTournament } from './tournaments/5-players.tournament';
 import { SixPlayersTournament } from './tournaments/6-players.tournament';
 import { EightPlayersTournament } from './tournaments/8-players.tournament';
+import { TenPlayersTournament } from './tournaments/10-players.tournament';
+import { TournamentType } from '../tournaments/enum/tour-type.enum';
+import { setTimeout } from 'timers/promises';
 
 @Injectable()
 export class TournamentGenerator {
@@ -34,11 +37,12 @@ export class TournamentGenerator {
 
     private plans: {[key: number]: any} = {};
 
-    private tournaments: any = [
+    private tournaments: any[] = [
         FourPlayersTournament,
         FivePlayersTournament,
         SixPlayersTournament,
         EightPlayersTournament,
+        TenPlayersTournament,
     ];
 
     private registerTournaments() {
@@ -137,7 +141,7 @@ export class TournamentGenerator {
         return this.gameService.createGames(_games, { _id: 1, name: 1 });
     }
 
-    @OnEvent('games.finished')
+    @OnEvent('game.finished.after')
     private async onGameFinished({ info }: { id: string, info: GameInfo }) {
         if (!info.tournament) return;
 
@@ -149,19 +153,26 @@ export class TournamentGenerator {
 
         const handler = Object.values(this.plans).find((plan: any) => plan.type === tournament.type)?.onGameFinished;
 
-        if (!handler) return;
+        if (!handler || tournament.type === TournamentType.CUSTOM) return;
 
         const playersIndexes = tournament.players.reduce((acc: { [key: string]: number }, player: ObjectId, index: number) => {
             acc[player.toString()] = index;
 
             return acc;
         }, {});
-        const games = await handler(info, playersIndexes)
+
+        // For some reason, sometimes statistics are not ready yet (ONLY FOR 10 PLAYERS TOURNAMENT). @TOOD: investigate and fix
+        await setTimeout(3000);
+
+        const stats = await this.statisticsService.getTournamentStats(tournament._id);
+        const games = await handler(info, playersIndexes, stats)
             .then((games: number[][]) => {
                 return games.map((game: number[]) => ({
                     players: game.map((index: number) => ({ _id: tournament.players[index] })),
                 }));
             });
+
+        if (games.length === 0) return;
 
         await this.generateGames(games, tournament._id);
     }

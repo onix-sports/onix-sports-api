@@ -10,6 +10,7 @@ import { ApiExtraModels, ApiTags, getSchemaPath } from '@nestjs/swagger';
 import { SchemaObject } from '@nestjs/swagger/dist/interfaces/open-api-spec.interface';
 import validationPipe from '@pipes/validation.pipe';
 import { ObjectId } from 'mongodb';
+import { TournamentService } from '../tournaments/tournament.service';
 import CreateGamesDto from './dto/create-game.dto';
 import { GetGameDto } from './dto/get-game.dto';
 import { GetGamesDto } from './dto/get-games.dto';
@@ -22,6 +23,7 @@ import { Game } from './schemas/game.schema';
 export class GamesController {
     constructor(
     private readonly gameService: GamesService,
+    private readonly tournamentService: TournamentService,
     ) {}
 
     @ApiResponse({
@@ -46,7 +48,7 @@ export class GamesController {
                 $ref: getSchemaPath(Game),
             },
         },
-        description: 'Creates a game.',
+        description: 'Creates a game. If game attached to tournament, tournament will be marked as custom.',
     })
     @ApiDefaultBadRequestResponse()
     @ApiDefaultNotFoundResponse([
@@ -57,7 +59,13 @@ export class GamesController {
     @Authorized(RolesEnum.admin)
     @Post('/')
     public async createGames(@Body() gamesDto: CreateGamesDto) {
-        return this.gameService.createGames(gamesDto);
+        const games = await this.gameService.createGames(gamesDto);
+
+        if (gamesDto.tournament) {
+            await this.tournamentService.makeCustom(gamesDto.tournament);
+        }
+
+        return games;
     }
 
     @ApiResponse({

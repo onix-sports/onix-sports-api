@@ -48,9 +48,7 @@ export const statsAggregationPipe = () => [
                 },
             },
             games: {
-                $sum: {
-                    $cond: [true, 1, 0],
-                },
+                $sum: 1,
             },
         },
     },

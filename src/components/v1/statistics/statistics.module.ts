@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { GamesModule } from '@components/v1/games/games.module';
 import { TournamentConstants } from '@components/v1/tournaments/tournament.constants';
@@ -17,7 +17,8 @@ import { ProfileStatisticsRepository } from './repositories/profile-statistics.r
 
 @Module({
     imports: [
-        GamesModule,
+        // @TODO: resolve circular dependency
+        forwardRef(() => GamesModule),
         MongooseModule.forFeature([
             {
                 name: statisticsConstants.models.statistics,

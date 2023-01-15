@@ -12,7 +12,7 @@ export class ActionService {
     private readonly gamesService: GamesService,
     ) {}
 
-  @OnEvent('games.finished')
+  @OnEvent('game.finished')
     public async create({ info: { actions }, game: { id } }: { game: Game, info: GameInfo }) {
         if (!actions) return [];
 

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { EventEmitter } from 'stream';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Game } from './core/game.class';
@@ -25,8 +25,6 @@ export class GameProcessService {
 
     private appendGame(game: Game) {
         this.emiter.once(gameEvent(game.id, 'finish'), () => {
-            this.eventEmitter.emit('game.finished', { id: game.id, info: game.info() });
-
             this.finish(game);
             this.removeGame(game.id);
         });
@@ -41,7 +39,7 @@ export class GameProcessService {
     private getGame(id: any) {
         const game = this.games[id];
 
-        if (!game) throw new Error('Game was not found');
+        if (!game) throw new BadRequestException('Game was not found');
 
         return game;
     }
@@ -51,7 +49,7 @@ export class GameProcessService {
             players, title, status, tournament,
         } = await this.gameRepository.getGameInfo(id);
 
-        if (status !== GameStatus.DRAFT) throw new Error('Game is already finished or started!');
+        if (status !== GameStatus.DRAFT) throw new BadRequestException('Game is already finished or started!');
 
         const game: Game = Game.create({
             id,
@@ -106,9 +104,11 @@ export class GameProcessService {
         const info = game.info();
 
         await this.saveGame(game.id, info);
-        await this.eventEmitter.emitAsync('games.finished', { game, info });
+        await this.eventEmitter.emitAsync('game.finished', { id: game.id, game, info });
 
         this.emiter.emit('finished', { id: info.id, info });
+
+        await this.eventEmitter.emitAsync('game.finished.after', { game, info });
     }
 
     private saveGame(id: any, info: GameInfo) {
