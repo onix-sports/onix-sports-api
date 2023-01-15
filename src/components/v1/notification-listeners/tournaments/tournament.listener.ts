@@ -3,7 +3,7 @@ import { MatchedContext, NotificationMessage } from '@components/v1/notification
 import { NotificationService } from '@components/v1/notification/notification.service';
 import { StatisticsService } from '@components/v1/statistics/services/statistics.service';
 import { TournamentType } from '@components/v1/tournaments/enum/tour-type.enum';
-import { PollAnswer, TournamentDocument } from '@components/v1/tournaments/schemas/tournament.schema';
+import { PollAnswer } from '@components/v1/tournaments/schemas/tournament.schema';
 import { TournamentService } from '@components/v1/tournaments/tournament.service';
 import { UserEntity } from '@components/v1/users/schemas/user.schema';
 import { UsersService } from '@components/v1/users/users.service';
@@ -173,36 +173,40 @@ export class TournamentListener extends NotificationListener {
     }
 
     @OnEvent('tournament.closed')
-    async handleCloseTournament({ tournament }: { tournament: TournamentDocument }) {
-        if (!tournament.telegram) return;
+    async handleCloseTournament({ tournamentId, performance }: { tournamentId: ObjectId, performance: { goals: any[] } }) {
+        const tournament = await this.tournamentService.getOne(tournamentId);
 
-        setTimeout(1000 * 10).then(async () => {
-            const _players = (tournament.players[0] as unknown as UserEntity[]);
-            const players = _players.map(({ name }: UserEntity) => name);
+        if (!tournament || !tournament.telegram || performance.goals.length === 0) return;
 
-            const answers: PollAnswer[] = _players.map(({ name, _id }: UserEntity) => ({ label: name, data: _id }));
-            const question = `Who was the MVP of tournament "${tournament.title}"? (on your opinion)`;
-            const result = await this.notificationService.sendPoll(
-        tournament.telegram!.chatId,
-        question,
-        players,
-        { reply_to_message_id: tournament.telegram!.messageId, is_anonymous: false },
-            );
+        await setTimeout(1000 * 10);
 
-            await this.tournamentService.createPoll(
-                tournament._id,
-                {
-                    id: result.poll.id,
-                    chatId: result.chat.id,
-                    messageId: result.message_id,
-                    question,
-                    answers,
-                    closed: result.poll.is_closed,
-                    results: {},
-                },
-            );
+        const _players = (tournament.players as unknown as UserEntity[]);
+        const players = _players.map(({ name }: UserEntity) => name);
 
-            const info = `
+        const answers: PollAnswer[] = _players.map(({ name, _id }: UserEntity) => ({ label: name, data: _id }));
+        const question = `Who was the MVP of tournament "${tournament.title}"? (on your opinion)`;
+
+        const result = await this.notificationService.sendPoll(
+            tournament.telegram!.chatId,
+            question,
+            players,
+            { reply_to_message_id: tournament.telegram!.messageId, is_anonymous: false },
+        );
+
+        await this.tournamentService.createPoll(
+            tournament._id,
+            {
+                id: result.poll.id,
+                chatId: result.chat.id,
+                messageId: result.message_id,
+                question,
+                answers,
+                closed: result.poll.is_closed,
+                results: {},
+            },
+        );
+
+        const info = `
 ◦ <i>Only tournament's players can vote. Another votes will be ignored</i>
 
 ◦ <i>"Yourself voting" will be ignored</i>
@@ -210,12 +214,11 @@ export class TournamentListener extends NotificationListener {
 ◦ <i>Votes to win: ${this.getMinimumVotes(answers)}</i>
       `;
 
-            await this.notificationService.send(
+        await this.notificationService.send(
           tournament.telegram!.chatId,
           info,
           { reply_to_message_id: result.message_id, parse_mode: 'HTML', disable_notification: true },
-            );
-        });
+        );
     }
 
     @OnEvent('notification.poll_answer')
@@ -274,12 +277,23 @@ export class TournamentListener extends NotificationListener {
         const maximumVotes = this.getMaximumVotes(tournament.poll.answers);
         const totalVotes = this.getTotalVotes(resultsWithAutovotes);
         const currentWinner = this.getCurrentWinner(filteredResults, tournament.poll.answers);
-        const player = (tournament.players[0] as unknown as UserEntity[]).find(({ _id }: UserEntity) => _id.equals(currentWinner.data));
+
+        this.logger.debug(`[${tournament._id.toString()}] Current winner: ${JSON.stringify(currentWinner)}`);
+        this.logger.debug(`[${tournament._id.toString()}] Minimum/Maximum/Total votes: ${minimumVotes} ${maximumVotes} ${totalVotes}`);
+
+        const player = (tournament.players as unknown as UserEntity[]).find(({ _id }: UserEntity) => _id.equals(currentWinner.data));
 
         if (currentWinner.votes >= minimumVotes && player) {
-            const respects = await this.tournamentService.getRespectedCount(player._id);
-            const avatarUrl = await this.notificationService.updateAvatar(player);
-            const users = await this.userService.getUsers(filteredResults[currentWinner.index]);
+            const [
+                respects,
+                avatarUrl,
+                users,
+            ] = await Promise.all([
+                this.tournamentService.getRespectedCount(player._id),
+                this.notificationService.updateAvatar(player),
+                this.userService.getUsers(filteredResults[currentWinner.index]),
+            ]);
+
             const html = respectedPlayerTemplate({
                 name: player.name,
                 avatarUrl,

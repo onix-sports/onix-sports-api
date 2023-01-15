@@ -52,6 +52,8 @@ export class TournamentService {
     async closeTournament(id: ObjectId) {
         const performance = await this.statisticsService.getTournamentPerform(id);
 
+        this.eventEmitter.emitAsync('tournament.closed', { performance, tournamentId: id });
+
         if (performance.goals.length === 0) {
             return this.tournamentRepository.deleteById(id).then(() => ({
                 message: 'Tournament was deleted because of no played games',
@@ -65,8 +67,6 @@ export class TournamentService {
             ),
             this.statisticsService.updateTournamentStat(performance.goals[0]._id, true),
         ]);
-
-        await this.eventEmitter.emitAsync('tournament.closed', { performance, tournament });
 
         return tournament;
     }
