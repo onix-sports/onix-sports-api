@@ -140,7 +140,7 @@ export class Game {
 
         const action = new Action({
             type,
-            player: { ...player } as Player | undefined,
+            player: player && Object.assign(Object.create(Object.getPrototypeOf(player)), player) as Player,
             info,
             game: new ObjectId(this.id),
             startedAt: this.startedAt,
