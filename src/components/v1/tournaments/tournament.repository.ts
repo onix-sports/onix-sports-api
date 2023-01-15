@@ -35,7 +35,7 @@ export class TournamentRepository {
     }
 
     async getById(id: ObjectId) {
-        const tournament = this.tournamentModel.findById(id);
+        const tournament = this.tournamentModel.findById(id).populate('players');
 
         if (!tournament) throw new Error('Tournament not found');
 

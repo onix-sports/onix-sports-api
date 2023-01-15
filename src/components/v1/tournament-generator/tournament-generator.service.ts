@@ -8,6 +8,7 @@ import { Document } from 'mongoose';
 import { Tournament } from '@components/v1/tournaments/schemas/tournament.schema';
 import { TournamentService } from '@components/v1/tournaments/tournament.service';
 import { Reflector } from '@nestjs/core';
+import { setTimeout } from 'timers/promises';
 import UsersRepository from '../users/users.repository';
 import { GameInfo } from '../games/core/interfaces/game-info.interface';
 import { StatisticsService } from '../statistics/services/statistics.service';
@@ -19,7 +20,6 @@ import { SixPlayersTournament } from './tournaments/6-players.tournament';
 import { EightPlayersTournament } from './tournaments/8-players.tournament';
 import { TenPlayersTournament } from './tournaments/10-players.tournament';
 import { TournamentType } from '../tournaments/enum/tour-type.enum';
-import { setTimeout } from 'timers/promises';
 
 @Injectable()
 export class TournamentGenerator {

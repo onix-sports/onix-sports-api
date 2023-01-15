@@ -1,5 +1,5 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
-import { EventEmitter2 } from '@nestjs/event-emitter';
+import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { ObjectId } from 'mongodb';
 import { FilterQuery } from 'mongoose';
 import { TournamentDocument } from '../tournaments/schemas/tournament.schema';
@@ -97,5 +97,10 @@ export class GamesService {
 
     public pushActions(id: ObjectId, actions: ObjectId[]) {
         return this.gamesRepository.updateById(id, { actions });
+    }
+
+    @OnEvent('tournament.closed')
+    private cleanTournamentGames({ tournamentId }: { tournamentId: ObjectId }) {
+        return this.gamesRepository.deleteNotFinished(tournamentId);
     }
 }

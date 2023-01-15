@@ -7,6 +7,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import statisticsConstants from './games-constants';
 import { GameEntity } from './schemas/game.schema';
 import CreateGameDto from './dto/create-game.dto';
+import { GameStatus } from './enum/game-status.enum';
 
 @Injectable()
 export default class GamesRepository {
@@ -40,5 +41,9 @@ export default class GamesRepository {
 
     async getGames(query: FilterQuery<GameEntity>, limit: number, skip: number, sort: any = {}) {
         return this.gameModel.find(query, {}, { sort }).skip(skip).limit(limit).populate('players', { name: 1, _id: 1 });
+    }
+
+    deleteNotFinished(tournament: ObjectId) {
+        return this.gameModel.deleteMany({ tournament, status: { $ne: GameStatus.FINISHED } });
     }
 }
