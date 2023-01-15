@@ -7,6 +7,7 @@ import { CreateTournamentDto } from './dto/create-tournament.dto';
 import { TournamentStatus } from './enum/tour-status.enum';
 import { TournamentRepository } from './tournament.repository';
 import { Poll, TelegramData } from './schemas/tournament.schema';
+import { TournamentType } from './enum/tour-type.enum';
 
 @Injectable()
 export class TournamentService {
@@ -36,12 +37,13 @@ export class TournamentService {
     @OnEvent('games.created', { async: true })
     async pushGames({ games }: { games: GameEntity[] }) {
         const _games = Array.isArray(games) ? games : [games];
+
         const promises = _games.map(({ tournament, _id, players }) => this.tournamentRepository.updateOne({
             _id: tournament,
             status: TournamentStatus.OPENED,
         }, {
             $push: { games: _id },
-            $addToSet: { players: players.map(({ _id }: any) => _id) },
+            $addToSet: { players: { $each: players.map(({ _id }: any) => _id) } },
         }));
 
         await Promise.all(promises);
@@ -87,5 +89,9 @@ export class TournamentService {
 
     getRespectedCount(user: ObjectId) {
         return this.tournamentRepository.countDocuments({ respected: user });
+    }
+
+    makeCustom(id: ObjectId) {
+        return this.tournamentRepository.updateById(id, { $set: { type: TournamentType.CUSTOM } });
     }
 }

@@ -10,6 +10,7 @@ import { GameProcessService } from './game-process.service';
 import { GamesGatewayDoc } from './games.gateway.doc';
 import { ChatExtention } from './extentions/chat/chat.service';
 import { UsersModule } from '../users/users.module';
+import { TournamentModule } from '../tournaments/tournament.module';
 
 @Module({
     imports: [
@@ -21,6 +22,7 @@ import { UsersModule } from '../users/users.module';
             },
         ]),
         UsersModule,
+        TournamentModule,
     ],
     controllers: [GamesController, GamesGatewayDoc],
     providers: [GamesService, GamesRepository, GamesGateway, GameProcessService, ChatExtention],

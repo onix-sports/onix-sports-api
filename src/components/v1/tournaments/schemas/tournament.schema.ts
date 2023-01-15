@@ -52,7 +52,7 @@ export class Tournament {
     status: TournamentStatus;
 
     @ApiProperty()
-    @Prop({ required: false })
+    @Prop({ default: TournamentType.CUSTOM })
     type: TournamentType;
 
     @ApiProperty()

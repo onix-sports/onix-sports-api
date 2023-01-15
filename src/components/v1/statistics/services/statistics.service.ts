@@ -31,7 +31,7 @@ export class StatisticsService {
     private readonly eventEmiter: EventEmitter2,
     ) {}
 
-  @OnEvent('games.finished', { async: true })
+  @OnEvent('game.finished', { async: true })
     public async saveStats({ game, info }: { game: Game, info: GameInfo }) {
         const getTeammate = (players: Player[], index: number) => {
             if (index === 0) {
@@ -49,7 +49,7 @@ export class StatisticsService {
             return players[2];
         };
         const stats = info.players.map((player, index, players) => ({
-            user: player._id,
+            user: new ObjectId(player._id),
             mGoals: player.mGoals,
             rGoals: player.rGoals,
             amGoals: player.amGoals,
