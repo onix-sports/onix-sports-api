@@ -35,6 +35,13 @@ async function bootstrap() {
 
     await app.listen(PORT as string);
 
+    process.on('uncaughtException', (error) => {
+        console.error(`uncaughtException: ${error.message}`, error.stack);
+    });
+    process.on('unhandledRejection', (error = {}) => {
+        console.error(`unhandledRejection: ${(error as any).message}`, (error as any).stack);
+    });
+
     console.log(`http://localhost:${PORT}/`);
 }
 bootstrap();

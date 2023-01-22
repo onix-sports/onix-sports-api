@@ -219,8 +219,8 @@ export class TournamentListener extends NotificationListener {
 
         const p: { id: ObjectId, answerId: number }[] = [
             {
-                id: new ObjectId('6156d2243a12c500166d99db'),
-                answerId: 1,
+                id: new ObjectId('6156d2243a12c500166d99db'), // Yarik Rubick Logan Vlad Vetail Andrey
+                answerId: 4,
             },
             {
                 id: new ObjectId('6156d2563a12c500166d99e0'),
@@ -232,7 +232,7 @@ export class TournamentListener extends NotificationListener {
             },
             {
                 id: new ObjectId('6156d2433a12c500166d99de'),
-                answerId: 1,
+                answerId: 4,
             },
             {
                 id: new ObjectId('6156d28a3a12c500166d99e2'),
@@ -240,7 +240,7 @@ export class TournamentListener extends NotificationListener {
             },
             {
                 id: new ObjectId('6156d2393a12c500166d99dd'),
-                answerId: 1,
+                answerId: 4,
             },
             {
                 id: user._id,
@@ -267,11 +267,10 @@ export class TournamentListener extends NotificationListener {
         const maximumVotes = this.getMaximumVotes(tournament.poll.answers);
         const totalVotes = this.getTotalVotes(resultsWithAutovotes);
         const currentWinner = this.getCurrentWinner(filteredResults, tournament.poll.answers);
-
-        this.logger.debug(`[${tournament._id.toString()}] Current winner: ${JSON.stringify(currentWinner)}`);
-        this.logger.debug(`[${tournament._id.toString()}] Minimum/Maximum/Total votes: ${minimumVotes} ${maximumVotes} ${totalVotes}`);
-
         const player = (tournament.players as unknown as UserEntity[]).find(({ _id }: UserEntity) => _id.equals(currentWinner.data));
+
+        this.logger.debug(`[${tournament._id.toString()}] Current winner: ${JSON.stringify(currentWinner)} ${JSON.stringify(player || {})}`);
+        this.logger.debug(`[${tournament._id.toString()}] Minimum/Maximum/Total votes: ${minimumVotes} ${maximumVotes} ${totalVotes}`);
 
         if (currentWinner.votes >= minimumVotes && player) {
             const [

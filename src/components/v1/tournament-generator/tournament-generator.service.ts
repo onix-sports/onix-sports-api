@@ -168,7 +168,7 @@ export class TournamentGenerator {
         const games = await handler(info, playersIndexes, stats)
             .then((games: number[][]) => {
                 return games.map((game: number[]) => ({
-                    players: game.map((index: number) => ({ _id: tournament.players[index] })),
+                    players: game.map((index: number) => ({ _id: (tournament.players[index] as any as UserEntity)._id as ObjectId })),
                 }));
             });
 
