@@ -262,11 +262,11 @@ export class StatisticsService {
       }
 
       /** Temp solution */
-      const [avatar] = await this.eventEmiter.emitAsync('telegram.updateAvatar', _stats.user);
+      //   const [avatar] = await this.eventEmiter.emitAsync('telegram.updateAvatar', _stats.user);
 
-      if (avatar) {
-          (_stats.user as unknown as UserEntity).avatarUrl = avatar;
-      }
+      //   if (avatar) {
+      //       (_stats.user as unknown as UserEntity).avatarUrl = avatar;
+      //   }
 
       const stats: ProfileStatistic & { gpg: number, winrate: number, keepTime: number } = {
           gpg: _stats.goals / _stats.games,
