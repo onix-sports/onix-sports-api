@@ -151,6 +151,8 @@ export class TournamentGenerator {
             throw new NotFoundException(`Tournament with id ${info.tournament} was not found`);
         }
 
+        tournament.players = (tournament.players as any as UserEntity[]).map((player: UserEntity) => player._id.toString());
+
         const handler = Object.values(this.plans).find((plan: any) => plan.type === tournament.type)?.onGameFinished;
 
         if (!handler || tournament.type === TournamentType.CUSTOM) return;
@@ -168,7 +170,7 @@ export class TournamentGenerator {
         const games = await handler(info, playersIndexes, stats)
             .then((games: number[][]) => {
                 return games.map((game: number[]) => ({
-                    players: game.map((index: number) => ({ _id: (tournament.players[index] as any as UserEntity)._id as ObjectId })),
+                    players: game.map((index: number) => ({ _id: tournament.players[index] })),
                 }));
             });
 

@@ -214,46 +214,8 @@ export class TournamentListener extends NotificationListener {
     @OnEvent('notification.poll_answer')
     async handlePollAnswer({ ctx, user }: NotificationMessage<'poll_answer'> & { user: UserEntity }) {
         const pollId = ctx.pollAnswer.poll_id;
-        // const [answerId] = ctx.pollAnswer.option_ids;
-        // const tournament = await this.tournamentService.votePoll(pollId, user._id, answerId);
-
-        const p: { id: ObjectId, answerId: number }[] = [
-            {
-                id: new ObjectId('6156d2243a12c500166d99db'), // Yarik Rubick Logan Vlad Vetail Andrey
-                answerId: 4,
-            },
-            {
-                id: new ObjectId('6156d2563a12c500166d99e0'),
-                answerId: 4,
-            },
-            {
-                id: new ObjectId('6156d22c3a12c500166d99dc'),
-                answerId: 4,
-            },
-            {
-                id: new ObjectId('6156d2433a12c500166d99de'),
-                answerId: 4,
-            },
-            {
-                id: new ObjectId('6156d28a3a12c500166d99e2'),
-                answerId: 4,
-            },
-            {
-                id: new ObjectId('6156d2393a12c500166d99dd'),
-                answerId: 4,
-            },
-            {
-                id: user._id,
-                answerId: ctx.pollAnswer.option_ids[0],
-            },
-        ];
-        let tournament;
-
-        // eslint-disable-next-line no-restricted-syntax
-        for (const { id, answerId } of p) {
-            // eslint-disable-next-line no-await-in-loop
-            tournament = await this.tournamentService.votePoll(pollId, id, answerId);
-        }
+        const [answerId] = ctx.pollAnswer.option_ids;
+        const tournament = await this.tournamentService.votePoll(pollId, user._id, answerId);
 
         if (!tournament || !tournament.poll) {
             this.logger.error(`Tournament by poll.id ${pollId} not found`);
