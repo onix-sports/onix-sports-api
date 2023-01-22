@@ -33,7 +33,7 @@ export class ProfileStatisticsRepository {
     }
 
     public async updateGameStat(user: ObjectId, data: any) {
-        const statistic = await this.profileStatisticsModel.findOneAndUpdate({ user }, {
+        const statistic = await this.profileStatisticsModel.findOneAndUpdate({ user: new ObjectId(user) }, {
             $inc: {
                 goals: data.mGoals + data.rGoals,
                 mGoals: data.mGoals,
@@ -60,7 +60,7 @@ export class ProfileStatisticsRepository {
         }, { new: true });
 
         if (statistic) {
-            statistic.lastGames = statistic.lastGames.slice(0, 9);
+            statistic.lastGames = statistic.lastGames.slice(1, 10);
         }
 
         return statistic?.save();
