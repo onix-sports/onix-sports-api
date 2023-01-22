@@ -1,6 +1,6 @@
 import { Context, NarrowedContext, Telegraf } from 'telegraf';
 import * as tt from 'telegraf/src/telegram-types';
-import { Update } from 'typegram';
+import { Update, User } from 'typegram';
 
 export type MatchedContext<
   C extends Context,
@@ -9,5 +9,6 @@ export type MatchedContext<
 
 export interface NotificationMessage<MessageType extends 'message' | 'poll_answer' | 'text'> {
   bot: Telegraf<Context<Update>>,
-  ctx: MatchedContext<Context<Update>, MessageType>
+  ctx: MatchedContext<Context<Update>, MessageType>,
+  user?: User,
 }

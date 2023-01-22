@@ -8,7 +8,7 @@ import { Markup, Telegraf } from 'telegraf';
 import {
     ExtraAnimation, ExtraPhoto, ExtraPoll, ExtraReplyMessage, ExtraStopPoll,
 } from 'telegraf/typings/telegram-types';
-import { InputFile } from 'typegram';
+import { InputFile, User } from 'typegram';
 import { ChatRepository } from './chat.repository';
 import { ChatType } from './enums/chat-type.enum';
 
@@ -42,18 +42,50 @@ export class NotificationService implements OnModuleInit {
 
     private bindHandlers() {
         this.bot.catch((err) => {
-            this.logger.error(err);
+            this.logger.error(err, (err as any)?.stack || '', 'TelegramBotErrorHandler');
+        });
+
+        this.bot.use(async (ctx, next) => {
+            if (ctx.from?.is_bot) return;
+
+            if (ctx.chat) {
+                this.chatRepository.create({ chatId: ctx.chat.id, type: ctx.chat.type as ChatType });
+            }
+
+            let from: User | undefined;
+
+            from ??= ctx.from;
+            from ??= ctx.message?.from;
+            from ??= ctx.callbackQuery?.from;
+            from ??= ctx.pollAnswer?.user;
+            from ??= ctx.shippingQuery?.from;
+            from ??= ctx.preCheckoutQuery?.from;
+            from ??= ctx.chosenInlineResult?.from;
+            from ??= ctx.inlineQuery?.from;
+            from ??= ctx.channelPost?.from;
+            from ??= ctx.editedChannelPost?.from;
+            from ??= ctx.editedMessage?.from;
+            from ??= ctx.myChatMember?.from;
+            from ??= ctx.chatMember?.from;
+
+            if (from) {
+                const user = await this.usersService.updateTelegramData(from.id, from.username, from);
+
+                Reflect.set(ctx, '__user', user);
+            }
+
+            next();
         });
 
         this.bot.on('message', (ctx) => {
-            this.chatRepository.create({ chatId: ctx.chat.id, type: ctx.chat.type as ChatType });
+            this.logger.debug(
+                `Chat[${ctx.chat.id}] ${ctx.from.username}: ${Reflect.get(ctx.message, 'text')} | telegram ${JSON.stringify(ctx.from)}`,
+            );
 
-            this.eventEmitter.emit('notification.message', { bot: this.bot, ctx });
+            this.eventEmitter.emit('notification.message', { bot: this.bot, ctx, user: Reflect.get(ctx, '__user') });
         });
         this.bot.on('poll_answer', async (ctx) => {
-            const user = await this.usersService.updateTelegramData(ctx.pollAnswer.user.id, ctx.pollAnswer.user.username, ctx.pollAnswer.user);
-
-            this.eventEmitter.emit('notification.poll_answer', { bot: this.bot, ctx, user });
+            this.eventEmitter.emit('notification.poll_answer', { bot: this.bot, ctx, user: Reflect.get(ctx, '__user') });
         });
     }
 
@@ -62,7 +94,10 @@ export class NotificationService implements OnModuleInit {
     public async updateAvatar(user: UserEntity) {
         if (!user.telegram.id) return userConstants.defaultAvatar;
 
-        const avatar = await this.Bot.telegram.getUserProfilePhotos(user.telegram.id, 0, 1).then((res: any) => (res.photos[0] || []).slice(-1)[0]);
+        const avatar = await this.Bot.telegram
+            .getUserProfilePhotos(user.telegram.id, 0, 1)
+            .then((res: any) => (res.photos[0] || []).slice(-1)[0])
+            .catch((error) => this.logger.error(`Telegram error: user id ${user.telegram.id} ${error}`));
         const result = avatar ? await this.Bot.telegram.getFileLink(avatar.file_id) : { href: userConstants.defaultAvatar };
 
         await this.usersService.updateAvatar(user?._id, result.href);

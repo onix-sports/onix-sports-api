@@ -89,15 +89,7 @@ export class TournamentListener extends NotificationListener {
         this.tournamentsRequests[result.chat.id] = {
             pollId: result.poll.id,
             messageId: result.message_id,
-            players: [
-                // Users for test
-                new ObjectId('6156d2243a12c500166d99db'),
-                new ObjectId('6156d22c3a12c500166d99dc'),
-                new ObjectId('6156d2393a12c500166d99dd'),
-                new ObjectId('6156d2433a12c500166d99de'),
-                new ObjectId('6156d24c3a12c500166d99df'),
-                new ObjectId('6156d2563a12c500166d99e0'),
-            ],
+            players: [],
         };
     }
 
@@ -109,7 +101,7 @@ export class TournamentListener extends NotificationListener {
 
         if (!chatId) return;
 
-        if (ctx.pollAnswer.option_ids[0] === 2) return;
+        if (ctx.pollAnswer.option_ids[0] === 1) return;
 
         this.tournamentsRequests[chatId].players.push(user._id);
     }
@@ -160,8 +152,6 @@ export class TournamentListener extends NotificationListener {
     @OnEvent('notification.message')
     handleMessage({ ctx }: NotificationMessage<'message'>) {
         const { text } = ctx.message as Update.New & Update.NonChannel & Message & { text?: string };
-
-        this.logger.log(ctx.message);
 
         if (!text || ctx.chat.type === 'private') return;
 
@@ -286,17 +276,15 @@ export class TournamentListener extends NotificationListener {
         if (currentWinner.votes >= minimumVotes && player) {
             const [
                 respects,
-                avatarUrl,
                 users,
             ] = await Promise.all([
                 this.tournamentService.getRespectedCount(player._id),
-                this.notificationService.updateAvatar(player),
                 this.userService.getUsers(filteredResults[currentWinner.index]),
             ]);
 
             const html = respectedPlayerTemplate({
                 name: player.name,
-                avatarUrl,
+                avatarUrl: player.avatarUrl,
                 respects,
             });
             const caption = `
