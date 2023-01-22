@@ -20,6 +20,7 @@ import { fivePlayersTemplate } from './templates/5-players.template';
 import { sixPlayersTemplate } from './templates/6-players.template';
 import { eightPlayersTemplate } from './templates/8-players.template';
 import { respectedPlayerTemplate } from './templates/respected.template';
+import { tenPlayersTemplate } from './templates/10-players.template';
 
 @Injectable()
 export class TournamentListener extends NotificationListener {
@@ -40,6 +41,7 @@ export class TournamentListener extends NotificationListener {
         [TournamentType.FIVE_PLAYERS]: fivePlayersTemplate,
         [TournamentType.SIX_PLAYERS]: sixPlayersTemplate,
         [TournamentType.EIGHT_PLAYERS]: eightPlayersTemplate,
+        [TournamentType.TEN_PLAYERS]: tenPlayersTemplate,
     };
 
     pollKeywords: string[] = [
