@@ -1,9 +1,8 @@
-import { PipeTransform, Injectable, ArgumentMetadata } from '@nestjs/common';
-import { ObjectId } from 'mongodb';
+import { PipeTransform, Injectable } from '@nestjs/common';
 
 @Injectable()
 export class ParseDatePipe implements PipeTransform {
-  transform(value: any, metadata: ArgumentMetadata) {
-    return value && new Date(Number(value));
-  }
+    transform(value: any) {
+        return value && new Date(Number(value));
+    }
 }

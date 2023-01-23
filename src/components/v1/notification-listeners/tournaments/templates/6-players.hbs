@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+
+  <style>
+    body {
+      background: rgb(8,32,48);
+      background: linear-gradient(159deg, rgba(8,32,48,1) 0%, rgba(34,87,122,1) 72%, rgba(4,120,144,1) 100%);
+    }
+
+  </style>
+</head>
+<body>
+
+  <div class="container" style="height: 550px;">
+    <div class="center">
+      <!-- <h2 class="white-text">Statistic was updated</h2> -->
+    </div>
+
+    <div class="center">
+      <h4 class="white-text" style="font-size: 48px;">{{ tournament.title }}</h3>
+      <h2 class="white-text" style="font-size: 24px; text-shadow: 0 0 40px #53f8ae;">{{ tournament.type }}</h2>
+    </div>
+
+    <br>
+    <br>
+
+    <div class="center">
+      <div class="white-text" style="font-size: 32px;">Teams</div>
+
+      {{#each teams}}
+        <div class="white-text" style="font-size: 24px; display: flex; justify-content: center; margin-bottom: 24px;">
+          <div>{{ this.player1.name }}</div> <div style="margin: 0 12px;">with</div> <div>{{ this.player2.name }}</div><div style="margin: 0 12px;">{{this.chance}}%</div>
+        </div>
+      {{/each}}
+
+      <div class="white-text" style="font-size: 32px;">First game</div>
+      <div class="white-text" style="font-size: 24px; display: flex; justify-content: center; margin-bottom: 24px;">
+        <div class="red-text">{{ players.[0].name }} {{ players.[1].name }}</div> <div style="margin: 0 12px;">vs</div> <div class="blue-text">{{ players.[2].name }} {{ players.[3].name }}</div>
+      </div>
+    </div>
+      
+    </div>
+  </div>
+
+  
+
+</body>
+</html>
+
