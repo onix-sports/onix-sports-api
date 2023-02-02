@@ -80,7 +80,7 @@ export class StatisticsService {
             const longestGame = games[0];
             const shortestGame = games[games.length - 1];
 
-            const stats = await this.statisticRepository.getByPlayer(player._id);
+            const stats = await this.statisticRepository.getByPlayer(new ObjectId(player._id));
             const won = stats.reduce((acc, val) => (acc + (val.won ? 1 : 0)), 0);
 
             return this.profileStatisticsRepository.updateGameStat(player._id, {
