@@ -5,6 +5,7 @@ import GamesRepository from '../games/games.repository';
 import StatisticsRepository from '../statistics/repositories/statistics.repository';
 import { StatisticsService } from '../statistics/services/statistics.service';
 import { TournamentService } from '../tournaments/tournament.service';
+import { TournamentRepository } from '../tournaments/tournament.repository';
 
 @Injectable()
 export class AdminService {
@@ -14,7 +15,23 @@ export class AdminService {
         private readonly statisticsRepository: StatisticsRepository,
         private readonly statisticsService: StatisticsService,
         private readonly tournamentService: TournamentService,
+        private readonly tournamentRepository: TournamentRepository,
     ) {}
+
+    public async deleteSingleGame(id: ObjectId) {
+        const game = await this.deleteGame(id);
+        const promises: Promise<any>[] = [
+            this.statisticsService.updateGamesProfileStats(game.players),
+        ];
+
+        if (game.tournament) {
+            promises.push(
+                this.tournamentService.removeGame(game.tournament, id),
+            );
+        }
+
+        return Promise.all(promises);
+    }
 
     public async deleteGame(id: ObjectId) {
         const [game] = await Promise.all([
@@ -27,14 +44,18 @@ export class AdminService {
             throw new NotFoundException('Game not found');
         }
 
-        const promises: Promise<any>[] = [this.statisticsService.updateGamesProfileStats()];
+        return game;
+    }
 
-        if (game.tournament) {
-            promises.push(
-                this.tournamentService.removeGame(game.tournament, id),
-            );
+    public async deleteTournament(id: ObjectId) {
+        const tournament = await this.tournamentRepository.deleteById(id);
+
+        if (!tournament) {
+            throw new NotFoundException('Tournament not found');
         }
 
-        return Promise.all(promises);
+        await Promise.all(tournament.games.map((gameId) => this.deleteGame(gameId)));
+
+        return this.statisticsService.updateGamesProfileStats(tournament.players);
     }
 }

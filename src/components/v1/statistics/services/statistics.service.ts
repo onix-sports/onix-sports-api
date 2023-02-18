@@ -104,9 +104,8 @@ export class StatisticsService {
         return _stats;
     }
 
-    public async updateGamesProfileStats() {
-        const users = await this.usersRepository.getAll();
-        const promises = users.map(({ _id }) => {
+    public async updateGamesProfileStats(users: ObjectId[]) {
+        const promises = users.map((_id: ObjectId) => {
             return this.gameService
                 .getGames({ players: _id, status: GameStatus.FINISHED })
                 .then((games) => {

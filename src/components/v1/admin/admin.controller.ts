@@ -10,6 +10,7 @@ import { ApiTags } from '@nestjs/swagger';
 import validationPipe from '@pipes/validation.pipe';
 import { AdminService } from './admin.service';
 import { DeleteGameDto } from './dto/delete-game.dto';
+import { DeleteTournamentDto } from './dto/delete-tournament.dto';
 
 @ApiTags('Admin')
 @Controller('admin')
@@ -23,10 +24,22 @@ export class AdminController {
     @ApiResponse({
         description: 'Deletes game and all statistics related to it',
     })
-    @HttpCode(HttpStatus.OK)
+    @HttpCode(HttpStatus.NO_CONTENT)
     @Authorized(RolesEnum.admin)
     @Delete('/game/:id')
     public async deleteGame(@Param(validationPipe) { id }: DeleteGameDto) {
-        return this.adminService.deleteGame(id).then(() => ({ success: true }));
+        return this.adminService.deleteSingleGame(id).then(() => ({}));
+    }
+
+    @ApiDefaultBadRequestResponse()
+    @ApiDefaultNotFoundResponse('Tournament not found')
+    @ApiResponse({
+        description: 'Deletes tournament and all statistics related to it',
+    })
+    @HttpCode(HttpStatus.NO_CONTENT)
+    @Authorized(RolesEnum.admin)
+    @Delete('/tournament/:id')
+    public async deleteTournament(@Param(validationPipe) { id }: DeleteTournamentDto) {
+        return this.adminService.deleteTournament(id).then(() => ({}));
     }
 }
