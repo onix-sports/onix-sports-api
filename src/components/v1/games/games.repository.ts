@@ -46,4 +46,8 @@ export default class GamesRepository {
     deleteNotFinished(tournament: ObjectId) {
         return this.gameModel.deleteMany({ tournament, status: { $ne: GameStatus.FINISHED } });
     }
+
+    deleteById(_id: ObjectId) {
+        return this.gameModel.findOneAndDelete({ _id });
+    }
 }

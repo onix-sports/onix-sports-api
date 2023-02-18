@@ -14,11 +14,13 @@ import { FakeStatisticsController } from './controllers/fake-statistics.controll
 import { FakeStatisticSchema } from './schemas/fake-statistics.schema';
 import { ProfileStatisticSchema } from './schemas/profile-statistics.schema';
 import { ProfileStatisticsRepository } from './repositories/profile-statistics.repository';
+import { UsersModule } from '../users/users.module';
 
 @Module({
     imports: [
         // @TODO: resolve circular dependency
         forwardRef(() => GamesModule),
+        UsersModule,
         MongooseModule.forFeature([
             {
                 name: statisticsConstants.models.statistics,

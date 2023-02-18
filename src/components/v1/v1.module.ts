@@ -7,6 +7,7 @@ import { StatisticsModule } from '@components/v1/statistics/statistics.module';
 import { TournamentModule } from '@components/v1/tournaments/tournament.module';
 import { SeassonsModule } from '@components/v1/seassons/seassons.module';
 import { AuthModule } from '@components/v1/auth/auth.module';
+import { AdminModule } from './admin/admin.module';
 
 @Module({
     imports: [
@@ -17,6 +18,7 @@ import { AuthModule } from '@components/v1/auth/auth.module';
         NotificationModule,
         ListenersModule,
         SeassonsModule,
+        AdminModule,
         AuthModule,
     ],
 })

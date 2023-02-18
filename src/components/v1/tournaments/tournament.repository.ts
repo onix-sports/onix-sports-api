@@ -35,11 +35,15 @@ export class TournamentRepository {
     }
 
     async getById(id: ObjectId) {
-        const tournament = this.tournamentModel.findById(id).populate('players');
+        const tournament = await this.tournamentModel.findById(id).populate('players');
 
         if (!tournament) throw new Error('Tournament not found');
 
         return tournament;
+    }
+
+    removeGame(_id: ObjectId, gameId: ObjectId) {
+        return this.tournamentModel.findOneAndUpdate({ _id }, { $pull: { games: gameId } }, { new: true }).populate('games');
     }
 
     updateById(id: StringObjectId, update: UpdateWithAggregationPipeline | UpdateQuery<TournamentDocument>) {

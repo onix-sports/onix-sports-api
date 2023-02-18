@@ -49,6 +49,24 @@ export class TournamentService {
         await Promise.all(promises);
     }
 
+    async removeGame(id: ObjectId, gameId: ObjectId) {
+        const tournament = await this.tournamentRepository.removeGame(id, gameId);
+
+        if (!tournament) {
+            throw new Error('Tournament not found');
+        }
+
+        const players = (tournament.games as any as GameEntity[])
+            .map(({ players }) => players.map((_id: ObjectId) => _id.toString()))
+            .flat();
+
+        const uniquePlayers = [...new Set(players)].map((_id: string) => new ObjectId(_id));
+
+        tournament.players = uniquePlayers;
+
+        return tournament.save();
+    }
+
     async closeTournament(id: ObjectId) {
         const performance = await this.statisticsService.getTournamentPerform(id);
 

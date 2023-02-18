@@ -4,6 +4,7 @@ import { Model } from 'mongoose';
 import { ObjectId } from 'mongodb';
 import { ProfileStatisticEntity } from '../schemas/profile-statistics.schema';
 import statisticsConstants from '../statistics-constants';
+import { UpdateGamesDto } from '../dto/update-games.dto';
 
 @Injectable()
 export class ProfileStatisticsRepository {
@@ -30,6 +31,10 @@ export class ProfileStatisticsRepository {
 
     public createDefault(user: ObjectId) {
         return this.profileStatisticsModel.create({ user });
+    }
+
+    public getAll() {
+        return this.profileStatisticsModel.find().populate('user').lean();
     }
 
     public async updateGameStat(user: ObjectId, data: any) {
@@ -64,6 +69,10 @@ export class ProfileStatisticsRepository {
         }
 
         return statistic?.save();
+    }
+
+    public setGames(user: ObjectId, { longestGame, shortestGame, lastGames }: UpdateGamesDto) {
+        return this.profileStatisticsModel.findOneAndUpdate(user, { $set: { longestGame, shortestGame, lastGames } });
     }
 
     public updateTournamentStat(user: ObjectId, isBest: boolean, isRespected: boolean = false) {

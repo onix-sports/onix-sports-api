@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
+import { ObjectId } from 'mongodb';
 import { Model } from 'mongoose';
 import { actionConstants } from './action.constants';
 import { CreateActionDto } from './dto/create-action.dto';
@@ -14,5 +15,9 @@ export class ActionRepository {
 
     create(actions: CreateActionDto[]) {
         return this.actionModel.create(actions);
+    }
+
+    deleteByGame(game: ObjectId) {
+        return this.actionModel.deleteMany({ game });
     }
 }
