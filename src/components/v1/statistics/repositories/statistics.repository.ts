@@ -123,4 +123,8 @@ export default class StatisticsRepository {
     public getByPlayer(user: ObjectId): Promise<Statistic[]> {
         return this.statisticModel.find({ user }, {}, { sort: { createdAt: -1 } }).lean() as unknown as Promise<Statistic[]>;
     }
+
+    public deleteByGame(game: ObjectId) {
+        return this.statisticModel.deleteMany({ game });
+    }
 }

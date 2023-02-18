@@ -58,7 +58,7 @@ export class Game {
 
     @ApiProperty()
     @Prop({ type: Number, default: 0 })
-    duration: Number;
+    duration: number;
 
     @ApiProperty()
     @Prop({ type: ObjectId, ref: TournamentConstants.models.tournaments })
