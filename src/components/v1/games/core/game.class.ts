@@ -1,5 +1,6 @@
 import EventEmitter from 'events';
 import { ObjectId } from 'mongodb';
+import { UserEntity } from '@components/v1/users/schemas/user.schema';
 import { ActionType } from '../enum/action-type.enum';
 import { GameStatus } from '../enum/game-status.enum';
 import { Positions } from '../enum/positions.enum';
@@ -10,43 +11,77 @@ import { GameInfo } from './interfaces/game-info.interface';
 import { Player } from './player.class';
 import { Players } from './players-list.class';
 import { IPushAction } from './interfaces/game-class.interfaces';
-import { IActionEventData } from './interfaces/action-event-data.interface';
 
 const TEAMS_ORDER = [Teams.red, Teams.red, Teams.blue, Teams.blue];
 const POSITIONS_ORDER = [Positions.goalkeeper, Positions.forward, Positions.goalkeeper, Positions.forward];
 
+interface IScore {
+    [Teams.red]: number;
+    [Teams.blue]: number;
+}
+
+interface IGame {
+    id: ObjectId;
+    title: string;
+    players: Players;
+    actions?: Action[];
+    score?: IScore;
+    status?: GameStatus;
+    winner?: Teams;
+    startedAt?: Date;
+    finishedAt?: Date;
+    totalPauseDuration?: number;
+    lastPauseDate?: number;
+    duration?: number;
+    tournament?: ObjectId;
+}
+
 export class Game {
-    id: any;
+    id: ObjectId;
 
-    private title: string = '';
+    private title: string;
 
-    private players: Players = new Players([]);
+    private players: Players;
 
-    private actions: Action[] = [];
+    private actions: Action[];
 
-    private score = { [Teams.red]: 0, [Teams.blue]: 0 };
+    private score: IScore;
 
-    private status: GameStatus = GameStatus.STARTED;
+    private status: GameStatus;
 
-    private winner: Teams;
+    private winner: Teams | null;
 
-    private startedAt = new Date();
+    private startedAt: Date | null;
 
-    private finishedAt: Date = new Date();
+    private finishedAt: Date | null;
 
-    private totalPauseDuration: number = 0;
+    private totalPauseDuration: number;
 
-    private lastPauseDate: number = 0;
+    private lastPauseDate: number | null;
 
-    private duration: number = 0;
+    private duration: number;
 
-    private tournament: ObjectId;
+    private tournament: ObjectId | null;
 
-    emitter: EventEmitter = new EventEmitter();
+    static emitter: EventEmitter = new EventEmitter();
 
-    constructor({
-        id, teams, title, emitter, tournament,
-    }: any) {
+    constructor(game: IGame) {
+        this.id = game.id;
+        this.title = game.title;
+        this.players = game.players;
+        this.actions = game.actions || [];
+        this.score = game.score || { [Teams.red]: 0, [Teams.blue]: 0 };
+        this.status = game.status || GameStatus.DRAFT;
+        this.winner = game.winner || null;
+        this.startedAt = game.startedAt || null;
+        this.finishedAt = game.finishedAt || null;
+        this.totalPauseDuration = game.totalPauseDuration || 0;
+        this.lastPauseDate = game.lastPauseDate || null;
+        this.duration = game.duration || 0;
+        this.tournament = game.tournament || null;
+    }
+
+    static wrapPlayers(teams: UserEntity[]) {
         const _players = teams.map(({ _id, name }: any, i: number) => new Player({
             _id,
             name,
@@ -54,17 +89,16 @@ export class Game {
             position: POSITIONS_ORDER[i],
         }));
 
-        this.id = id;
-        this.title = title;
-        this.players = new Players(_players);
-        this.emitter = emitter;
-        this.tournament = tournament;
-
-        this.pushAction({ type: ActionType.START });
+        return new Players(_players);
     }
 
-    static create(gameObj: any) {
-        return new Game(gameObj);
+    public start() {
+        this.status = GameStatus.STARTED;
+        this.startedAt = new Date();
+
+        this.pushAction({ type: ActionType.START });
+
+        return this;
     }
 
     private _score(team: Teams, callback: Function) {
@@ -111,11 +145,10 @@ export class Game {
     }
 
     public unpause() {
-        if (this.status === GameStatus.UNPAUSED) return this;
+        if (this.status !== GameStatus.PAUSED) return this;
 
         this.status = GameStatus.UNPAUSED;
-
-        this.totalPauseDuration += Date.now() - this.lastPauseDate;
+        this.totalPauseDuration += Date.now() - this.lastPauseDate!;
         this.pushAction({ type: ActionType.RESUME });
 
         return this;
@@ -143,19 +176,23 @@ export class Game {
             player: player && Object.assign(Object.create(Object.getPrototypeOf(player)), player) as Player,
             info,
             game: new ObjectId(this.id),
-            startedAt: this.startedAt,
-            id: Date.now(),
+            startedAt: this.startedAt!,
+            id: new ObjectId(),
         });
 
         this.actions.push(action);
-        this.emitter.emit(gameEvent(this.id, 'action'), {
-            type, player, info, actions: this.actions,
-        } as IActionEventData);
+
+        this.emit('action', {
+            type,
+            player,
+            info,
+            actions: this.actions,
+        });
     }
 
-    public cancel(id: number) {
-        const action = this.actions.find((_action: Action) => _action.id === id);
-        const index = this.actions.findIndex((_action: Action) => _action.id === id);
+    public cancel(id: ObjectId) {
+        const index = this.actions.findIndex((_action: Action) => _action.id.toString() === id.toString());
+        const action = this.actions[index];
 
         if (action?.player) {
             action.player.cancel(action.type, action.player.position);
@@ -171,14 +208,18 @@ export class Game {
     }
 
     private finish(team: Teams) {
+        if (this.status === GameStatus.DRAFT) throw new Error('Game has not started yet!');
+
         this.winner = team;
         this.finishedAt = new Date();
         this.status = GameStatus.FINISHED;
-
-        this.duration = this.finishedAt.valueOf() - this.startedAt.valueOf() - this.totalPauseDuration;
-
+        this.duration = this.finishedAt.valueOf() - this.startedAt!.valueOf() - this.totalPauseDuration;
         this.pushAction({ type: ActionType.FINISH });
-        this.emitter.emit(gameEvent(this.id, 'finish'));
+        this.emit('finish', { info: this.info() });
+    }
+
+    private emit(event: string, data: any = {}) {
+        return Game.emitter.emit(event, { ...data, gameId: this.id });
     }
 
     public info(): GameInfo {

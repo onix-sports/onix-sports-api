@@ -4,9 +4,10 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import {
     MessageBody, OnGatewayInit, SubscribeMessage, WebSocketGateway, WebSocketServer, WsResponse,
 } from '@nestjs/websockets';
+import validationPipe from '@pipes/validation.pipe';
 import { Server } from 'socket.io';
-import { EventEmitter } from 'stream';
 import { GameEventDto } from './dto/game-event.dto';
+import { GameIdDto } from './dto/start-game.dto';
 import { GameProcessService } from './game-process.service';
 import { IFinish } from './interfaces/games-gateway.interfaces';
 
@@ -24,23 +25,23 @@ export class GamesGateway implements OnGatewayInit {
 
     private logger: Logger = new Logger(GamesGateway.name);
 
-    public emiter: EventEmitter = new EventEmitter();
-
-    afterInit() {
-        this.emiter = this.gameProcessService.Emiter;
-
-        this.emiter.on('finish', this.finish);
+    get emitter() {
+        return this.gameProcessService.emitter;
     }
 
-    private finish({ id, info }: IFinish) {
-        this.server.emit('finish', { id, info });
+    afterInit() {
+        this.emitter.on('finish', this.finish.bind(this));
+    }
+
+    private finish({ gameId, info }: IFinish) {
+        this.server.emit('finish', { id: gameId, info });
     }
 
     @SubscribeMessage('start')
-    public async start(@MessageBody('id') id: string): Promise<WsResponse> {
+    public async start(@MessageBody(validationPipe) { id }: GameIdDto): Promise<WsResponse> {
         await this.gameProcessService.start(id);
 
-        const data = this.gameProcessService.info(id);
+        const data = await this.gameProcessService.info(id);
 
         this.server.emit('data', data);
         this.eventEmitter.emit('game.started', { id, info: data });
@@ -49,8 +50,8 @@ export class GamesGateway implements OnGatewayInit {
     }
 
     @SubscribeMessage('goal')
-    public goal(@MessageBody() { id, playerId, enemyId }: GameEventDto): WsResponse {
-        const data = this.gameProcessService.goal(id, playerId, enemyId);
+    public async goal(@MessageBody() { id, playerId, enemyId }: GameEventDto): Promise<WsResponse<any>> {
+        const data = await this.gameProcessService.goal(id, playerId, enemyId);
 
         this.server.emit('data', data);
 
@@ -58,7 +59,7 @@ export class GamesGateway implements OnGatewayInit {
     }
 
     @SubscribeMessage('pause')
-    public async pause(@MessageBody('id') id: string): Promise<WsResponse> {
+    public async pause(@MessageBody(validationPipe) { id }: GameEventDto): Promise<WsResponse> {
         const data = await this.gameProcessService.pause(id);
 
         this.server.emit('data', data);
@@ -67,8 +68,8 @@ export class GamesGateway implements OnGatewayInit {
     }
 
     @SubscribeMessage('cancel')
-    public cancel(@MessageBody() { id, actionId }: GameEventDto): WsResponse {
-        const data = this.gameProcessService.cancel(id, actionId);
+    public async cancel(@MessageBody(validationPipe) { id, actionId }: GameEventDto): Promise<WsResponse<any>> {
+        const data = await this.gameProcessService.cancel(id, actionId);
 
         this.server.emit('data', data);
 
@@ -76,8 +77,8 @@ export class GamesGateway implements OnGatewayInit {
     }
 
     @SubscribeMessage('swap')
-    public swap(@MessageBody() { id, playerId }: GameEventDto): WsResponse {
-        const data = this.gameProcessService.swap(id, playerId);
+    public async swap(@MessageBody() { id, playerId }: GameEventDto): Promise<WsResponse<any>> {
+        const data = await this.gameProcessService.swap(id, playerId);
 
         this.server.emit('data', data);
 
@@ -85,8 +86,8 @@ export class GamesGateway implements OnGatewayInit {
     }
 
     @SubscribeMessage('data')
-    public data(@MessageBody('id') id: string): WsResponse {
-        const data = this.gameProcessService.info(id);
+    public async data(@MessageBody(validationPipe) { id }: GameEventDto): Promise<WsResponse<any>> {
+        const data = await this.gameProcessService.info(id);
 
         return { event: 'data', data };
     }

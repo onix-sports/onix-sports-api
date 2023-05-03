@@ -18,7 +18,7 @@ import gameConstants from '../games-constants';
 export class Game {
     @ApiProperty()
     @Prop({ type: String, default: '' })
-    title: String;
+    title: string;
 
     @ApiProperty()
     @Prop({ type: [ObjectId], required: true, ref: userConstants.models.users })
@@ -54,7 +54,7 @@ export class Game {
 
     @ApiProperty()
     @Prop({ type: [Number] })
-    score: Number[];
+    score: number[];
 
     @ApiProperty()
     @Prop({ type: Number, default: 0 })

@@ -3,20 +3,22 @@ import { IActionEventData } from '@components/v1/games/core/interfaces/action-ev
 import { GameInfo } from '@components/v1/games/core/interfaces/game-info.interface';
 import { ActionType } from '@components/v1/games/enum/action-type.enum';
 import { GamesGateway } from '@components/v1/games/games.gateway';
-import { gameEvent } from '@components/v1/games/utils/event.util';
 import { WsExceptionFilter } from '@filters/ws-exception.filter';
 import { Injectable, Logger, UseFilters } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
-import { MessageBody, SubscribeMessage, WebSocketGateway } from '@nestjs/websockets';
-import { IExtention } from '../interfaces/extention.interface';
+import {
+    MessageBody, OnGatewayInit, SubscribeMessage, WebSocketGateway,
+} from '@nestjs/websockets';
+import { ObjectId } from 'mongodb';
 import { authors } from './authors';
 import { IMessage } from './interfaces/message.interface';
 import { Message, messages } from './messages';
+import { Game } from '../../core/game.class';
 
 @Injectable()
 @UseFilters(new WsExceptionFilter())
 @WebSocketGateway({ transports: ['websocket'] })
-export class ChatExtention implements IExtention {
+export class ChatExtention implements OnGatewayInit {
     constructor(
     private readonly gameGateway: GamesGateway,
     ) {}
@@ -25,9 +27,15 @@ export class ChatExtention implements IExtention {
 
     private readonly chats: {[key: string]: { messages: IMessage[], info?: GameInfo, interval: NodeJS.Timeout, actions?: Action[] }} = {};
 
+    afterInit() {
+        Game.emitter.on('action', ({ gameId }: { gameId: ObjectId }) => {
+            // @TODO: fix chat extention after using redis
+        });
+    }
+
     @OnEvent('game.started')
     private handleStart({ id, info }: { id: string, info: GameInfo }) {
-        this.gameGateway.emiter.on(gameEvent(id, 'action'), this.handleAction.bind(this));
+        this.gameGateway.emitter.on('action', this.handleAction.bind(this));
 
         const interval = setInterval(this.chatAI.bind(this), 100, id);
 
@@ -37,12 +45,10 @@ export class ChatExtention implements IExtention {
     }
 
     @OnEvent('game.finished')
-    private handleFinish({ id }: { id: string }) {
-        this.gameGateway.emiter.off(gameEvent(id, 'action'), this.handleAction.bind(this));
+    private handleFinish({ id }: { id: ObjectId }) {
+        clearInterval(this.chats[id.toString()]?.interval);
 
-        clearInterval(this.chats[id].interval);
-
-        delete this.chats[id];
+        delete this.chats[id.toString()];
     }
 
     @SubscribeMessage('chat.message')
@@ -55,7 +61,7 @@ export class ChatExtention implements IExtention {
     }
 
     private handleAction(data: IActionEventData) {
-        const chat = this.chats[data.info.id];
+        const chat = this.chats[data.info.id.toString()];
 
         if (!chat) return;
 
