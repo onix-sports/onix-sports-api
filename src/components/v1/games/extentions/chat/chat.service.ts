@@ -13,7 +13,7 @@ import { ObjectId } from 'mongodb';
 import { authors } from './authors';
 import { IMessage } from './interfaces/message.interface';
 import { Message, messages } from './messages';
-import { Game } from '../../core/game.class';
+// import { Game } from '../../core/game.class';
 
 @Injectable()
 @UseFilters(new WsExceptionFilter())
@@ -28,9 +28,9 @@ export class ChatExtention implements OnGatewayInit {
     private readonly chats: {[key: string]: { messages: IMessage[], info?: GameInfo, interval: NodeJS.Timeout, actions?: Action[] }} = {};
 
     afterInit() {
-        Game.emitter.on('action', ({ gameId }: { gameId: ObjectId }) => {
-            // @TODO: fix chat extention after using redis
-        });
+        // Game.emitter.on('action', ({ gameId }: { gameId: ObjectId }) => {
+        //     // @TODO: fix chat extention after using redis
+        // });
     }
 
     @OnEvent('game.started')

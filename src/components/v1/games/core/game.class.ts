@@ -5,7 +5,6 @@ import { ActionType } from '../enum/action-type.enum';
 import { GameStatus } from '../enum/game-status.enum';
 import { Positions } from '../enum/positions.enum';
 import { Teams } from '../enum/teams.enum';
-import { gameEvent } from '../utils/event.util';
 import { Action } from './action.class';
 import { GameInfo } from './interfaces/game-info.interface';
 import { Player } from './player.class';

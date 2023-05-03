@@ -1,6 +1,5 @@
 import { GameInfo } from '@components/v1/games/core/interfaces/game-info.interface';
 import { GamesService } from '@components/v1/games/games.service';
-import { Game } from '@components/v1/games/core/game.class';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { ObjectId } from 'mongodb';
