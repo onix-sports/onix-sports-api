@@ -16,7 +16,7 @@ export class GameProcessService {
     ) {
         Game.emitter.on('finish', async ({ info, gameId }: { info: GameInfo, gameId: ObjectId }) => {
             await Promise.all([
-                this.finish(info),
+                this._finish(info),
                 this.gameRepository.delete(gameId),
             ]);
         });
@@ -52,6 +52,18 @@ export class GameProcessService {
         }).start();
 
         await this.gameRepository.save(id, game);
+    }
+
+    public async finish(id: ObjectId) {
+        const game: Game = await this.getGame(id);
+
+        const info = game
+            .finish()
+            .info();
+
+        await this.gameRepository.save(id, game);
+
+        return info;
     }
 
     public async goal(id: ObjectId, playerId: ObjectId, enemyId: ObjectId) {
@@ -110,7 +122,7 @@ export class GameProcessService {
         return info;
     }
 
-    private async finish(info: GameInfo) {
+    private async _finish(info: GameInfo) {
         await this.saveGame(info.id, info);
         await this.eventEmitter.emitAsync('game.finished', { id: info.id, info });
 

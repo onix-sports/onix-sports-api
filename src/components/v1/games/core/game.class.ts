@@ -19,6 +19,12 @@ interface IScore {
     [Teams.blue]: number;
 }
 
+interface IGameConfig {
+    maxGoals: number;
+    maxDuration: number;
+    additionalTime: number;
+}
+
 interface IGame {
     id: ObjectId;
     title: string;
@@ -33,6 +39,7 @@ interface IGame {
     lastPauseDate?: number;
     duration?: number;
     tournament?: ObjectId;
+    config?: IGameConfig;
 }
 
 export class Game {
@@ -50,6 +57,8 @@ export class Game {
 
     private winner: Teams | null;
 
+    private posibleWinner: Teams | null;
+
     private startedAt: Date | null;
 
     private finishedAt: Date | null;
@@ -61,6 +70,12 @@ export class Game {
     private duration: number;
 
     private tournament: ObjectId | null;
+
+    private config: IGameConfig = {
+        maxGoals: 10,
+        maxDuration: Number.POSITIVE_INFINITY,
+        additionalTime: 1000 * 60 * 2,
+    };
 
     static emitter: EventEmitter = new EventEmitter();
 
@@ -78,6 +93,10 @@ export class Game {
         this.lastPauseDate = game.lastPauseDate || null;
         this.duration = game.duration || 0;
         this.tournament = game.tournament || null;
+
+        if (game.config) {
+            this.config = game.config;
+        }
     }
 
     static wrapPlayers(teams: UserEntity[]) {
@@ -92,10 +111,21 @@ export class Game {
     }
 
     public start() {
+        if (this.status !== GameStatus.DRAFT) throw new Error('Game has already started or finished!');
+
         this.status = GameStatus.STARTED;
         this.startedAt = new Date();
 
         this.pushAction({ type: ActionType.START });
+
+        return this;
+    }
+
+    private moveToPending(team: Teams) {
+        this.status = GameStatus.PENDING;
+        this.posibleWinner = team;
+
+        this.emit('pending');
 
         return this;
     }
@@ -105,13 +135,17 @@ export class Game {
 
         callback();
 
-        if (this.score[team] === 10) {
-            this.finish(team);
+        if (this.score[team] === this.config.maxGoals) {
+            this.moveToPending(team);
         }
     }
 
     public goal(id: any, enemy?: any) {
-        if (this.status === GameStatus.PAUSED) throw new Error('Game is paused!');
+        if (this.status === GameStatus.PAUSED) throw new Error('Game has been paused!');
+        if (this.status === GameStatus.PENDING) throw new Error('Game is waiting to be finished!');
+        if (this.status === GameStatus.FINISHED) throw new Error('Game has been finished!');
+        if (this.status === GameStatus.DRAFT) throw new Error('Game has not started yet!');
+
         if (enemy) {
             const player = this.players.get(enemy);
             player.autogoal();
@@ -133,7 +167,9 @@ export class Game {
     }
 
     public pause() {
+        if (this.status === GameStatus.PENDING) throw new Error('Game is waiting to be finished!');
         if (this.status === GameStatus.PAUSED) return this;
+        if (this.status === GameStatus.FINISHED) throw new Error('Game has been finished!');
 
         this.status = GameStatus.PAUSED;
 
@@ -154,6 +190,9 @@ export class Game {
     }
 
     public swap(id: any) {
+        if (this.status === GameStatus.PENDING) throw new Error('Game is waiting to be finished!');
+        if (this.status === GameStatus.FINISHED) throw new Error('Game has been finished!');
+
         const player = this.players.get(id);
         const teamate = this.players.getTeamate(id);
         const { position } = player;
@@ -190,6 +229,10 @@ export class Game {
     }
 
     public cancel(id: ObjectId) {
+        if (this.status === GameStatus.PENDING) throw new Error('Game is waiting to be finished!');
+        if (this.status === GameStatus.FINISHED) throw new Error('Game has been finished!');
+        if (this.status === GameStatus.DRAFT) throw new Error('Game has not started yet!');
+
         const index = this.actions.findIndex((_action: Action) => _action.id.toString() === id.toString());
         const action = this.actions[index];
 
@@ -206,15 +249,17 @@ export class Game {
         return this;
     }
 
-    private finish(team: Teams) {
-        if (this.status === GameStatus.DRAFT) throw new Error('Game has not started yet!');
+    public finish() {
+        if (this.status !== GameStatus.PENDING) throw new Error('Game can not be finished!');
 
-        this.winner = team;
+        this.winner = this.posibleWinner;
         this.finishedAt = new Date();
         this.status = GameStatus.FINISHED;
         this.duration = this.finishedAt.valueOf() - this.startedAt!.valueOf() - this.totalPauseDuration;
         this.pushAction({ type: ActionType.FINISH });
         this.emit('finish', { info: this.info() });
+
+        return this;
     }
 
     private emit(event: string, data: any = {}) {
