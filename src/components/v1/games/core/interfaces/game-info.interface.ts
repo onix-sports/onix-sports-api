@@ -5,15 +5,15 @@ import { GameStatus } from '../../enum/game-status.enum';
 import { Teams } from '../../enum/teams.enum';
 
 export interface GameInfo {
-  id: any;
-  title: string,
-  players: Player[],
-  actions?: Action[],
-  score: any,
-  status: GameStatus,
-  winner: Teams,
-  startedAt: Date,
-  finishedAt: Date,
-  duration: number,
-  tournament: ObjectId;
+  id: ObjectId;
+  title: string;
+  players: Player[];
+  actions?: Action[];
+  score: any;
+  status: GameStatus;
+  winner: Teams | null;
+  startedAt: Date | null;
+  finishedAt: Date | null;
+  duration: number;
+  tournament: ObjectId | null;
 }

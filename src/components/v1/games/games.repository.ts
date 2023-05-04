@@ -4,17 +4,28 @@ import {
 } from 'mongoose';
 import { ObjectId } from 'mongodb';
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { Redis } from 'ioredis';
+import { RedisService } from '@liaoliaots/nestjs-redis';
 import statisticsConstants from './games-constants';
 import { GameEntity } from './schemas/game.schema';
 import CreateGameDto from './dto/create-game.dto';
+import { Game } from './core/game.class';
 import { GameStatus } from './enum/game-status.enum';
+import { Player } from './core/player.class';
+import { Players } from './core/players-list.class';
+import { Action } from './core/action.class';
 
 @Injectable()
 export default class GamesRepository {
+    private readonly redisClient: Redis;
+
     constructor(
     @InjectModel(statisticsConstants.models.games)
     private readonly gameModel: Model<GameEntity>,
-    ) {}
+    private readonly redisService: RedisService,
+    ) {
+        this.redisClient = redisService.getClient();
+    }
 
     async create(_games: CreateGameDto[]| CreateGameDto, select?: any) {
         const games = await this.gameModel.create(_games);
@@ -49,5 +60,33 @@ export default class GamesRepository {
 
     deleteById(_id: ObjectId) {
         return this.gameModel.findOneAndDelete({ _id });
+    }
+
+    save(id: ObjectId, game: Game) {
+        return this.redisClient.set(id.toString(), JSON.stringify(game));
+    }
+
+    get(id: ObjectId) {
+        return this.redisClient.get(id.toString()).then((game) => {
+            if (!game) throw new NotFoundException('Game was not found');
+
+            const _game = JSON.parse(game);
+            const players = _game.players.players.map((player: any) => new Player(player));
+
+            _game.id = new ObjectId(_game.id);
+            _game.tournament = new ObjectId(_game.tournament);
+            _game.startedAt = _game.startedAt && new Date(_game.startedAt);
+            _game.finishedAt = _game.finishedAt && new Date(_game.finishedAt);
+            _game.lastPauseDate = _game.lastPauseDate && new Date(_game.lastPauseDate);
+            _game.actions = _game.actions.map((action: any) => new Action(action));
+
+            _game.players = new Players(players);
+
+            return new Game(_game);
+        });
+    }
+
+    delete(id: ObjectId) {
+        return this.redisClient.del(id.toString());
     }
 }

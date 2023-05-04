@@ -164,7 +164,7 @@ export class TournamentListener extends NotificationListener {
         this.requestTournament(ctx);
     }
 
-    @OnEvent('tournament.closed')
+    // @OnEvent('tournament.closed')
     async handleCloseTournament({ tournamentId, performance }: { tournamentId: ObjectId, performance: { goals: any[] } }) {
         const tournament = await this.tournamentService.getOne(tournamentId);
 
@@ -213,7 +213,7 @@ export class TournamentListener extends NotificationListener {
         );
     }
 
-    @OnEvent('notification.poll_answer')
+    // @OnEvent('notification.poll_answer')
     async handlePollAnswer({ ctx, user }: NotificationMessage<'poll_answer'> & { user: UserEntity }) {
         const pollId = ctx.pollAnswer.poll_id;
         const [answerId] = ctx.pollAnswer.option_ids;

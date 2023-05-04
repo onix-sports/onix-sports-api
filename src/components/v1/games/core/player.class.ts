@@ -29,14 +29,14 @@ export class Player {
     position: any;
 
     constructor({
-        _id, name, team, position,
+        _id, name, team, position, mGoals = 0, rGoals = 0, amGoals = 0, arGoals = 0,
     }: any) {
         this._id = _id.toString();
         this.name = name;
-        this.mGoals = 0;
-        this.rGoals = 0;
-        this.amGoals = 0;
-        this.arGoals = 0;
+        this.mGoals = mGoals;
+        this.rGoals = rGoals;
+        this.amGoals = amGoals;
+        this.arGoals = arGoals;
         this.team = team;
         this.position = position;
     }

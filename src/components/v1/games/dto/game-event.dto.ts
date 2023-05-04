@@ -1,13 +1,26 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { toObjectId } from '@components/v1/common/transforms/to-object-id.transform';
+import { ApiPropertyOptional } from '@nestjs/swagger';
+import { Transform, Type } from 'class-transformer';
+import { IsOptional } from 'class-validator';
+import { ObjectId } from 'mongodb';
 import { GameIdDto } from './start-game.dto';
 
 export class GameEventDto extends GameIdDto {
-    @ApiProperty({ type: String })
-    readonly playerId: string = '';
+    @ApiPropertyOptional({ type: String })
+    @IsOptional()
+    @Type(() => String)
+    @Transform(toObjectId)
+    readonly playerId: ObjectId;
 
-    @ApiProperty({ type: String })
-    readonly enemyId: string = '';
+    @ApiPropertyOptional({ type: String })
+    @IsOptional()
+    @Type(() => String)
+    @Transform(toObjectId)
+    readonly enemyId: ObjectId;
 
-    @ApiProperty({ type: Number })
-    readonly actionId: number;
+    @ApiPropertyOptional({ type: String })
+    @IsOptional()
+    @Type(() => String)
+    @Transform(toObjectId)
+    readonly actionId: ObjectId;
 }

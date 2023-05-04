@@ -1,5 +1,5 @@
 import { Teams } from '@components/v1/games/enum/teams.enum';
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { ObjectId } from 'mongodb';
 
 export default class CreateStatsDto {
@@ -18,8 +18,8 @@ export default class CreateStatsDto {
     @ApiProperty({ type: String })
     readonly game: ObjectId = new ObjectId();
 
-    @ApiProperty({ type: String })
-    readonly tournament: ObjectId = new ObjectId();
+    @ApiPropertyOptional({ type: String })
+    readonly tournament: ObjectId | null;
 
     @ApiProperty({ type: Teams })
     readonly team: Teams = Teams.red;

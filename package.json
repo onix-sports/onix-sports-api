@@ -25,6 +25,7 @@
     "prepare": "husky install"
   },
   "dependencies": {
+    "@liaoliaots/nestjs-redis": "9.0.5",
     "@nestjs/common": "9.1.6",
     "@nestjs/config": "2.2.0",
     "@nestjs/core": "9.1.6",
@@ -43,6 +44,7 @@
     "dotenv": "16.0.3",
     "fluent-ffmpeg": "2.1.2",
     "handlebars": "4.7.7",
+    "ioredis": "5.3.1",
     "lodash": "4.17.21",
     "migrate-mongo": "9.0.0",
     "module-alias": "2.2.2",

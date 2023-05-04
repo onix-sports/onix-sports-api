@@ -1,6 +1,5 @@
 import { GameInfo } from '@components/v1/games/core/interfaces/game-info.interface';
 import { GamesService } from '@components/v1/games/games.service';
-import { Game } from '@components/v1/games/core/game.class';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { ObjectId } from 'mongodb';
@@ -33,7 +32,7 @@ export class StatisticsService {
     ) {}
 
     @OnEvent('game.finished', { async: true })
-    public async saveStats({ game, info }: { game: Game, info: GameInfo }) {
+    public async saveStats({ info }: { info: GameInfo }) {
         const getTeammate = (players: Player[], index: number) => {
             if (index === 0) {
                 return players[1];
@@ -69,7 +68,7 @@ export class StatisticsService {
 
         const _stats = await this.statisticRepository.create(stats);
 
-        await this.gameService.pushStats(new ObjectId(game.id), _stats.map(({ _id }) => _id));
+        await this.gameService.pushStats(info.id, _stats.map(({ _id }) => _id));
 
         const promises = info.players.map(async (player) => {
             const games = await this.gameService.getGames(
@@ -93,7 +92,7 @@ export class StatisticsService {
                 totalTime: info.duration,
                 longestGame: longestGame._id,
                 shortestGame: shortestGame._id,
-                gameId: new ObjectId(info.id),
+                gameId: info.id,
                 winrate: won / stats.length,
                 ...this.calculatePositionsTimes(player._id, info.actions as Action[]),
             });

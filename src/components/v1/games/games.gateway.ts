@@ -2,11 +2,13 @@ import { WsExceptionFilter } from '@filters/ws-exception.filter';
 import { Logger, UseFilters } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import {
+    ConnectedSocket,
     MessageBody, OnGatewayInit, SubscribeMessage, WebSocketGateway, WebSocketServer, WsResponse,
 } from '@nestjs/websockets';
-import { Server } from 'socket.io';
-import { EventEmitter } from 'stream';
+import validationPipe from '@pipes/validation.pipe';
+import { Server, Socket } from 'socket.io';
 import { GameEventDto } from './dto/game-event.dto';
+import { GameIdDto } from './dto/start-game.dto';
 import { GameProcessService } from './game-process.service';
 import { IFinish } from './interfaces/games-gateway.interfaces';
 
@@ -24,69 +26,81 @@ export class GamesGateway implements OnGatewayInit {
 
     private logger: Logger = new Logger(GamesGateway.name);
 
-    public emiter: EventEmitter = new EventEmitter();
-
-    afterInit() {
-        this.emiter = this.gameProcessService.Emiter;
-
-        this.emiter.on('finish', this.finish);
+    get emitter() {
+        return this.gameProcessService.emitter;
     }
 
-    private finish({ id, info }: IFinish) {
-        this.server.emit('finish', { id, info });
+    afterInit() {
+        this.emitter.on('finish', this._finish.bind(this));
+        this.emitter.on('pending', this.pending.bind(this));
+    }
+
+    private _finish({ gameId, info }: IFinish) {
+        this.server.to(gameId.toString()).emit('finish', { id: gameId, info });
+    }
+
+    private pending({ gameId, info }: IFinish) {
+        this.server.to(gameId.toString()).emit('pending', { id: gameId, info });
     }
 
     @SubscribeMessage('start')
-    public async start(@MessageBody('id') id: string): Promise<WsResponse> {
+    public async start(@MessageBody(validationPipe) { id }: GameIdDto): Promise<void> {
         await this.gameProcessService.start(id);
 
-        const data = this.gameProcessService.info(id);
+        const data = await this.gameProcessService.info(id);
 
-        this.server.emit('data', data);
+        this.server.to(id.toString()).emit('data', data);
         this.eventEmitter.emit('game.started', { id, info: data });
-
-        return { event: 'data', data };
     }
 
     @SubscribeMessage('goal')
-    public goal(@MessageBody() { id, playerId, enemyId }: GameEventDto): WsResponse {
-        const data = this.gameProcessService.goal(id, playerId, enemyId);
+    public async goal(@MessageBody() { id, playerId, enemyId }: GameEventDto): Promise<void> {
+        const data = await this.gameProcessService.goal(id, playerId, enemyId);
 
-        this.server.emit('data', data);
-
-        return { event: 'data', data };
+        this.server.to(id.toString()).emit('data', data);
     }
 
     @SubscribeMessage('pause')
-    public async pause(@MessageBody('id') id: string): Promise<WsResponse> {
+    public async pause(@MessageBody(validationPipe) { id }: GameEventDto): Promise<void> {
         const data = await this.gameProcessService.pause(id);
 
-        this.server.emit('data', data);
-
-        return { event: 'data', data };
+        this.server.to(id.toString()).emit('data', data);
     }
 
     @SubscribeMessage('cancel')
-    public cancel(@MessageBody() { id, actionId }: GameEventDto): WsResponse {
-        const data = this.gameProcessService.cancel(id, actionId);
+    public async cancel(@MessageBody(validationPipe) { id, actionId }: GameEventDto): Promise<void> {
+        const data = await this.gameProcessService.cancel(id, actionId);
 
-        this.server.emit('data', data);
-
-        return { event: 'data', data };
+        this.server.to(id.toString()).emit('data', data);
     }
 
     @SubscribeMessage('swap')
-    public swap(@MessageBody() { id, playerId }: GameEventDto): WsResponse {
-        const data = this.gameProcessService.swap(id, playerId);
+    public async swap(@MessageBody() { id, playerId }: GameEventDto): Promise<void> {
+        const data = await this.gameProcessService.swap(id, playerId);
 
-        this.server.emit('data', data);
+        this.server.to(id.toString()).emit('data', data);
+    }
+
+    @SubscribeMessage('finish')
+    public async finish(@MessageBody() { id }: GameEventDto): Promise<void> {
+        const data = await this.gameProcessService.finish(id);
+
+        this.server.to(id.toString()).emit('data', data);
+        this.server.socketsLeave(id.toString());
+    }
+
+    @SubscribeMessage('data')
+    public async data(@MessageBody(validationPipe) { id }: GameEventDto): Promise<WsResponse<any>> {
+        const data = await this.gameProcessService.info(id);
 
         return { event: 'data', data };
     }
 
-    @SubscribeMessage('data')
-    public data(@MessageBody('id') id: string): WsResponse {
-        const data = this.gameProcessService.info(id);
+    @SubscribeMessage('join')
+    public async join(@MessageBody(validationPipe) { id }: GameEventDto, @ConnectedSocket() client: Socket): Promise<WsResponse<any>> {
+        const data = await this.gameProcessService.info(id);
+
+        await client.join(id.toString());
 
         return { event: 'data', data };
     }

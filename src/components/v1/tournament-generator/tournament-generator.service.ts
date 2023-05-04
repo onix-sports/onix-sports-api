@@ -142,7 +142,7 @@ export class TournamentGenerator {
     }
 
     @OnEvent('game.finished.after')
-    private async onGameFinished({ info }: { id: string, info: GameInfo }) {
+    private async onGameFinished({ info }: { info: GameInfo }) {
         if (!info.tournament) return;
 
         const tournament = await this.tournamentService.getOne(info.tournament);

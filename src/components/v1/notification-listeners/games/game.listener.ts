@@ -38,7 +38,7 @@ export class GameListener extends NotificationListener {
     }
 
     @OnEvent('game.finished')
-    handleGameFinish({ info }: { id: string, info: GameInfo }) {
+    handleGameFinish({ info }: { info: GameInfo }) {
         this.notify.notify_on_end.forEach((chatId) => {
             this.notificationService.send(chatId as Number, ...gameFinishedTemplate(info));
 

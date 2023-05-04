@@ -3,6 +3,17 @@ import { ObjectId } from 'mongodb';
 import { ActionType } from '../enum/action-type.enum';
 import { Player } from './player.class';
 
+interface IAction {
+    type: ActionType;
+    player?: Player;
+    info: any;
+    game: ObjectId;
+    startedAt: Date;
+    id: ObjectId;
+    time?: Date;
+    timeFromStart?: number;
+}
+
 export class Action {
     @ApiProperty({ type: String })
     type: ActionType;
@@ -11,7 +22,7 @@ export class Action {
     player: Player | null | undefined;
 
     @ApiProperty({ type: String })
-    time: any;
+    time: Date;
 
     @ApiProperty({ type: String })
     timeFromStart: number;
@@ -23,17 +34,24 @@ export class Action {
     game: ObjectId;
 
     @ApiProperty({ type: Number })
-    id: number;
+    id: ObjectId;
 
     constructor({
-        type, player, info, game, startedAt, id,
-    }: { type: ActionType, player?: Player, info: any, game: ObjectId, startedAt: Date, id: number }) {
+        type,
+        player,
+        info,
+        game,
+        startedAt,
+        id,
+        time = new Date(),
+        timeFromStart = new Date().valueOf() - startedAt.valueOf(),
+    }: IAction) {
         this.type = type;
-        this.player = player;
-        this.time = new Date();
-        this.timeFromStart = new Date().valueOf() - startedAt.valueOf();
+        this.player = player && new Player(player);
+        this.time = new Date(time);
+        this.timeFromStart = timeFromStart;
         this.info = info;
-        this.game = game;
-        this.id = id;
+        this.game = new ObjectId(game);
+        this.id = new ObjectId(id);
     }
 }

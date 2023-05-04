@@ -1,81 +1,91 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { EventEmitter } from 'stream';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { ObjectId } from 'mongodb';
 import { Game } from './core/game.class';
 import { Teams } from './enum/teams.enum';
 import GamesRepository from './games.repository';
-import { gameEvent } from './utils/event.util';
 import { GameInfo } from './core/interfaces/game-info.interface';
 import { GameStatus } from './enum/game-status.enum';
+import { UserEntity } from '../users/schemas/user.schema';
 
 @Injectable()
 export class GameProcessService {
     constructor(
     private readonly gameRepository: GamesRepository,
     private readonly eventEmitter: EventEmitter2,
-    ) {}
-
-    private games: {[key: string]: Game} = {};
-
-    private emiter: EventEmitter = new EventEmitter();
-
-    get Emiter() {
-        return this.emiter;
-    }
-
-    private appendGame(game: Game) {
-        this.emiter.once(gameEvent(game.id, 'finish'), () => {
-            this.finish(game);
-            this.removeGame(game.id);
+    ) {
+        Game.emitter.on('finish', async ({ info, gameId }: { info: GameInfo, gameId: ObjectId }) => {
+            await Promise.all([
+                this._finish(info),
+                this.gameRepository.delete(gameId),
+            ]);
         });
-
-        this.games[game.id] = game;
     }
 
-    private removeGame(id: any) {
-        delete this.games[id];
+    get emitter() {
+        return Game.emitter;
     }
 
-    private getGame(id: any) {
-        const game = this.games[id];
+    private async getGame(id: ObjectId) {
+        const game = await this.gameRepository.get(id);
 
         if (!game) throw new BadRequestException('Game was not found');
 
         return game;
     }
 
-    public async start(id: String) {
+    public async start(id: ObjectId) {
         const {
-            players, title, status, tournament,
+            players,
+            title,
+            status,
+            tournament,
         } = await this.gameRepository.getGameInfo(id);
 
         if (status !== GameStatus.DRAFT) throw new BadRequestException('Game is already finished or started!');
 
-        const game: Game = Game.create({
+        const game: Game = new Game({
             id,
-            teams: players,
+            players: Game.wrapPlayers(players as any as UserEntity[]),
             title,
-            emitter: this.emiter,
             tournament,
-        });
+        }).start();
 
-        this.appendGame(game);
-
-        await this.saveGame(id, game.info());
+        await this.gameRepository.save(id, game);
     }
 
-    public goal(id: any, playerId: any, enemyId: any) {
-        return this.getGame(id)
+    public async finish(id: ObjectId) {
+        const game: Game = await this.getGame(id);
+
+        const info = game
+            .finish()
+            .info();
+
+        await this.gameRepository.save(id, game);
+
+        return info;
+    }
+
+    public async goal(id: ObjectId, playerId: ObjectId, enemyId: ObjectId) {
+        const game: Game = await this.getGame(id);
+
+        const info = game
             .goal(playerId, enemyId)
             .info();
+
+        await this.gameRepository.save(id, game);
+
+        return info;
     }
 
-    public info(id: any) {
-        return this.getGame(id).info();
+    public async info(id: ObjectId) {
+        const game: Game = await this.getGame(id);
+
+        return game.info();
     }
 
-    public async pause(id: any) {
-        const game = this.getGame(id);
+    public async pause(id: ObjectId) {
+        const game = await this.getGame(id);
 
         if (game.info().status === GameStatus.PAUSED) {
             game.unpause();
@@ -83,32 +93,42 @@ export class GameProcessService {
             game.pause();
         }
 
-        await this.saveGame(id, game.info());
+        await this.gameRepository.save(id, game);
 
         return game.info();
     }
 
-    public swap(id: any, playerId: any) {
-        return this.getGame(id)
+    public async swap(id: ObjectId, playerId: ObjectId) {
+        const game: Game = await this.getGame(id);
+
+        const info = game
             .swap(playerId)
             .info();
+
+        await this.gameRepository.save(id, game);
+
+        return info;
     }
 
-    public cancel(id: any, actionId: number) {
-        return this.getGame(id)
+    public async cancel(id: ObjectId, actionId: ObjectId) {
+        const game = await this.getGame(id);
+
+        const info = game
             .cancel(actionId)
             .info();
+
+        await this.gameRepository.save(id, game);
+
+        return info;
     }
 
-    private async finish(game: Game) {
-        const info = game.info();
+    private async _finish(info: GameInfo) {
+        await this.saveGame(info.id, info);
+        await this.eventEmitter.emitAsync('game.finished', { id: info.id, info });
 
-        await this.saveGame(game.id, info);
-        await this.eventEmitter.emitAsync('game.finished', { id: game.id, game, info });
+        this.emitter.emit('finished', { id: info.id, info });
 
-        this.emiter.emit('finished', { id: info.id, info });
-
-        await this.eventEmitter.emitAsync('game.finished.after', { game, info });
+        await this.eventEmitter.emitAsync('game.finished.after', { id: info.id, info });
     }
 
     private saveGame(id: any, info: GameInfo) {
