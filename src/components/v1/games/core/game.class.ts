@@ -229,7 +229,6 @@ export class Game {
     }
 
     public cancel(id: ObjectId) {
-        if (this.status === GameStatus.PENDING) throw new Error('Game is waiting to be finished!');
         if (this.status === GameStatus.FINISHED) throw new Error('Game has been finished!');
         if (this.status === GameStatus.DRAFT) throw new Error('Game has not started yet!');
 
@@ -244,6 +243,12 @@ export class Game {
             }
 
             this.actions.splice(index, 1);
+        }
+
+        const noWinner = this.score[Teams.red] !== this.config.maxGoals && this.score[Teams.blue] !== this.config.maxGoals;
+
+        if (noWinner) {
+            this.status = GameStatus.STARTED;
         }
 
         return this;
