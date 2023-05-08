@@ -1,5 +1,5 @@
 import { InjectModel } from '@nestjs/mongoose';
-import { FilterQuery, Model } from 'mongoose';
+import { FilterQuery, Model, UpdateQuery } from 'mongoose';
 import { ObjectId } from 'mongodb';
 import { Injectable } from '@nestjs/common';
 import SignUpDto from '@components/v1/auth/dto/sign-up.dto';
@@ -49,5 +49,13 @@ export default class UsersRepository {
 
     set(filter: FilterQuery<UserEntity>, $set: any) {
         return this.userModel.findOneAndUpdate(filter, { $set });
+    }
+
+    update(filter: FilterQuery<UserEntity>, update: UpdateQuery<UserEntity>) {
+        return this.userModel.findOneAndUpdate(filter, update);
+    }
+
+    updateMany(filter: FilterQuery<UserEntity>, update: UpdateQuery<UserEntity>) {
+        return this.userModel.updateMany(filter, update);
     }
 }

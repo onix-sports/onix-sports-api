@@ -5,9 +5,4 @@ export default {
             refreshToken: '30d',
         },
     },
-    models: {
-        auth: {
-            name: 'auth',
-        },
-    },
 };

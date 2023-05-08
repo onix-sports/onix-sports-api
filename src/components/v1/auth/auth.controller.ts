@@ -10,11 +10,13 @@ import { ApiForbiddenResponse, ApiTags } from '@nestjs/swagger';
 import validationPipe from '@pipes/validation.pipe';
 import TelegramVerifiedGuard from '@guards/telegram-verified.guard';
 import DebugResponse from '@decorators/debug-response.decorator';
+import DevelopmentGuard from '@guards/development.guard';
 import { AuthService } from './auth.service';
 import JwtPayloadDto from './dto/jwt-payload.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import TelegramCallbackDto from './dto/telegram-callback.dto';
 import TelegramSignInDto from './dto/telegram-sign-in.dto';
+import { LocalLoginDto } from './dto/local-login.dto';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -104,6 +106,28 @@ export class AuthController {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     public telegramCallback(@Body() { hash, authDate, ...payload }: TelegramCallbackDto) {
         return this.authService.login(payload);
+    }
+
+    @ApiResponse({
+        properties: {
+            type: 'object',
+            properties: {
+                accessToken: {
+                    type: 'string',
+                },
+                refreshToken: {
+                    type: 'string',
+                },
+            },
+        },
+        description: 'Returns jwt tokens',
+    })
+    @ApiDefaultBadRequestResponse()
+    @HttpCode(HttpStatus.OK)
+    @UseGuards(DevelopmentGuard)
+    @Post('/local-sign-in')
+    localSignIn(@Body() body: LocalLoginDto) {
+        return this.authService.localLogin(body.user);
     }
 
     @ApiResponse({

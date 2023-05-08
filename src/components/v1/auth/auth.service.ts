@@ -8,6 +8,7 @@ import UserCreateDto from './dto/user-create.dto';
 import authConstants from './auth.constants';
 import AuthRepository from './auth.repository';
 import LoginDto from './dto/login.dto';
+import { ObjectId } from 'mongodb';
 
 @Injectable()
 export class AuthService {
@@ -38,7 +39,7 @@ export class AuthService {
 
         const oldToken = await this.authRepository.getRefreshToken(payload.telegram.id) || { refreshToken: '' };
 
-        if (oldToken.refreshToken !== token) {
+        if (oldToken !== token) {
             throw new ForbiddenException('Invalid token');
         }
 
@@ -64,6 +65,7 @@ export class AuthService {
         const payload: JwtPayloadDto = {
             _id: user._id,
             role: user.role,
+            organizations: user.organizations,
             telegram,
         };
 
@@ -86,6 +88,16 @@ export class AuthService {
         return {
             accessToken,
         };
+    }
+
+    async localLogin(user: ObjectId) {
+        const foundUser = await this.usersRepository.getUser(user);
+
+        if (!foundUser) {
+            throw new ForbiddenException('User not found!');
+        }
+
+        return this.login({ firstName: foundUser.name, photoUrl: foundUser.avatarUrl, ...foundUser.telegram }, true);
     }
 
     async verifyToken(token: string) {

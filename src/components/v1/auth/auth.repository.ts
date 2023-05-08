@@ -1,25 +1,26 @@
+import { RedisService } from '@liaoliaots/nestjs-redis';
 import { Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
-import authConstants from './auth.constants';
-import { AuthEntity } from './schemas/auth.schema';
+import { Redis } from 'ioredis';
 
 @Injectable()
 export default class AuthRepository {
+    private readonly redisClient: Redis;
+
     constructor(
-        @InjectModel(authConstants.models.auth.name)
-        private readonly authModel: Model<AuthEntity>,
-    ) {}
+        private readonly redisService: RedisService,
+    ) {
+        this.redisClient = redisService.getClient();
+    }
 
     public addRefreshToken(id: number, refreshToken: string) {
-        return this.authModel.findOneAndReplace({ id }, { id, refreshToken }, { upsert: true });
+        return this.redisClient.set(`refreshToken:${id}`, refreshToken);
     }
 
     public deleteRefreshToken(id: number) {
-        return this.authModel.findOneAndDelete({ id });
+        return this.redisClient.del(`refreshToken:${id}`);
     }
 
     public getRefreshToken(id: number) {
-        return this.authModel.findOne({ id });
+        return this.redisClient.get(`refreshToken:${id}`);
     }
 }

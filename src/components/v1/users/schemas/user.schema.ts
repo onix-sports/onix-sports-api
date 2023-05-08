@@ -3,6 +3,7 @@ import { Document } from 'mongoose';
 import { RolesEnum } from '@decorators/roles.decorator';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { ApiProperty } from '@nestjs/swagger';
+import { ObjectId } from 'mongodb';
 import usersConstants from '../user-constants';
 
 export type TelegramData = {
@@ -47,6 +48,10 @@ export class User {
     @ApiProperty()
     @Prop({ type: {} as TelegramData, default: {} })
     telegram: TelegramData;
+
+    @ApiProperty()
+    @Prop({ type: Array, default: [] })
+    organizations: ObjectId[];
 }
 
 export type UserEntity = User & Document;

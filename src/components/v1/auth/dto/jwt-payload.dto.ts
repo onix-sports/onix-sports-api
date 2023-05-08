@@ -10,6 +10,9 @@ export default class JwtPayloadDto {
     @ApiProperty({ enum: RolesEnum })
     role: RolesEnum;
 
+    @ApiProperty({ type: Array })
+    organizations: ObjectId[];
+
     @ApiProperty({ type: LoginDto })
     telegram: LoginDto;
 }
