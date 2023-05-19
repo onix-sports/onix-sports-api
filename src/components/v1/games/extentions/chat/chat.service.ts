@@ -49,6 +49,10 @@ export class ChatExtention implements IExtention {
     private handleMessage(@MessageBody() { text, author }: { text: string, author: string }) {
         if (!text || !author) return;
 
+        const includesHtml = /<[^>]*>/g.test(text);
+
+        if (includesHtml) return;
+
         this.gameGateway.server.emit('chat.message', {
             text, author, time: new Date(),
         });
