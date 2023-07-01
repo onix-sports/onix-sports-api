@@ -15,7 +15,7 @@ export class SeassonsService {
 
         return {
             dateFrom: new Date(year, month % 12, 1),
-            dateTo: new Date(year, (month % 12) + 3, 0),
+            dateTo: new Date(year, (month % 12) + 3, 0, 23, 59, 59),
         };
     }
 
