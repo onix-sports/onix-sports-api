@@ -58,6 +58,7 @@ export class StatisticsService {
             won: player.team === info.winner,
             game: new ObjectId(info.id),
             tournament: info.tournament,
+            organization: info.organization,
             teammate: getTeammate(players, index),
             enemy: index < 2 ? players.slice(2) : players.slice(0, 2),
         })).map((stat) => ({
@@ -158,8 +159,8 @@ export class StatisticsService {
         });
     }
 
-    public getStatsPeriod(ids?: ObjectId[], dateFrom?: Date, dateTo?: Date) {
-        return this.statisticRepository.getStatsPeriod(ids, dateFrom, dateTo);
+    public getStatsPeriod(organization: ObjectId, ids?: ObjectId[], dateFrom?: Date, dateTo?: Date) {
+        return this.statisticRepository.getStatsPeriod(organization, ids, dateFrom, dateTo);
     }
 
     public getTournamentStats(id: ObjectId) {
@@ -236,9 +237,9 @@ export class StatisticsService {
         return players.filter(this.filterGuests).length * 2;
     }
 
-    public async getLeaderboard(dateFrom?: Date, dateTo?: Date): Promise<LeaderboardEntity[]> {
-        let stats = await this.statisticRepository.getStatsPeriod([], dateFrom, dateTo);
-        const fakeStats = await this.fakeStatisticService.getStats();
+    public async getLeaderboard(organization: ObjectId, dateFrom?: Date, dateTo?: Date): Promise<LeaderboardEntity[]> {
+        let stats = await this.getStatsPeriod(organization, [], dateFrom, dateTo);
+        const fakeStats = await this.fakeStatisticService.getStats(organization);
 
         stats = stats.map((stat) => {
             return fakeStats.find(({ user }) => user.equals(stat._id)) || stat;
@@ -284,13 +285,6 @@ export class StatisticsService {
             throw new NotFoundException('Profile statistics not found');
         }
 
-        /** Temp solution */
-        //   const [avatar] = await this.eventEmiter.emitAsync('telegram.updateAvatar', _stats.user);
-
-        //   if (avatar) {
-        //       (_stats.user as unknown as UserEntity).avatarUrl = avatar;
-        //   }
-
         const stats: ProfileStatistic & { gpg: number, winrate: number, keepTime: number } = {
             gpg: _stats.goals / _stats.games,
             winrate: _stats.won / _stats.games,
@@ -301,7 +295,7 @@ export class StatisticsService {
         return stats;
     }
 
-  @OnEvent('user.created', { async: true })
+    @OnEvent('user.created', { async: true })
     public onUserCreated(user: UserEntity) {
         return this.profileStatisticsRepository.createDefault(user._id);
     }

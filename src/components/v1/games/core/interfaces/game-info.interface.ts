@@ -16,4 +16,7 @@ export interface GameInfo {
   finishedAt: Date | null;
   duration: number;
   tournament: ObjectId | null;
+  organization: ObjectId;
+  moderator: ObjectId;
+  posibleWinner: Teams | null;
 }

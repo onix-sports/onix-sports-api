@@ -10,23 +10,23 @@ import { Document } from 'mongoose';
     timestamps: true,
 })
 export class Action {
-  @Prop()
-      type: ActionType = ActionType.MGOAL;
+    @Prop()
+    type: ActionType;
 
-  @Prop({ ref: userConstants.models.users, required: false })
-      player: ObjectId = new ObjectId();
+    @Prop({ ref: userConstants.models.users, required: false })
+    player: ObjectId;
 
-  @Prop()
-      time: Date = new Date();
+    @Prop()
+    time: Date;
 
-  @Prop()
-      timeFromStart: Number;
+    @Prop()
+    timeFromStart: Number;
 
-  @Prop({ type: Object })
-      info: any;
+    @Prop({ type: Object })
+    info: any;
 
-  @Prop({ ref: gamesConstants.models.games })
-      game: ObjectId = new ObjectId();
+    @Prop({ ref: gamesConstants.models.games })
+    game: ObjectId;
 }
 
 export type ActionDocument = Action & Document;

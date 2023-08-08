@@ -10,7 +10,7 @@ import { ITournament } from '../interfaces/tournament.interface';
             [0, 1, 2, 3],
             [0, 4, 1, 3],
             [3, 4, 0, 2],
-            [1, 2, 0, 3],
+            [1, 2, 0, 4],
             [3, 2, 4, 1],
         ],
         teams: [],

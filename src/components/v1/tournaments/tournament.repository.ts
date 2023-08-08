@@ -16,14 +16,14 @@ export class TournamentRepository {
     private readonly tournamentModel: Model<TournamentDocument>,
     ) {}
 
-    create(tournament: CreateTournamentDto) {
+    create(tournament: CreateTournamentDto & { creator: ObjectId, moderator: ObjectId }) {
         return this.tournamentModel.create(tournament);
     }
 
-    getAll({ skip, limit, status }: any = { skip: 0, limit: 0 }) {
+    getAll({ skip, limit, ...query }: any = { skip: 0, limit: 0 }) {
         return this.tournamentModel
             .find({
-                ...(status && { status }),
+                ...query,
             })
             .sort({ createdAt: -1 })
             .skip(skip)
@@ -40,6 +40,14 @@ export class TournamentRepository {
         if (!tournament) throw new Error('Tournament not found');
 
         return tournament;
+    }
+
+    getTournamentByCreator(_id: ObjectId, creator: ObjectId) {
+        return this.tournamentModel.findOne({ _id, creator });
+    }
+
+    getTournamentByOrganizations(_ids: ObjectId[], organizations: ObjectId[]) {
+        return this.tournamentModel.find({ _id: { $in: _ids }, organization: { $in: organizations } });
     }
 
     removeGame(_id: ObjectId, gameId: ObjectId) {
@@ -60,5 +68,9 @@ export class TournamentRepository {
 
     deleteById(id: ObjectId) {
         return this.tournamentModel.findByIdAndDelete(id);
+    }
+
+    changeModerator(tournament: ObjectId, currentModerator: ObjectId, moderator: ObjectId) {
+        return this.tournamentModel.updateOne({ _id: tournament, moderator: currentModerator }, { moderator });
     }
 }

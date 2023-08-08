@@ -8,9 +8,8 @@ import gamesConstants from './games-constants';
 import { GamesGateway } from './games.gateway';
 import { GameProcessService } from './game-process.service';
 import { GamesGatewayDoc } from './games.gateway.doc';
-import { ChatExtention } from './extentions/chat/chat.service';
 import { UsersModule } from '../users/users.module';
-import { TournamentModule } from '../tournaments/tournament.module';
+import { OrganizationsModule } from '../organizations/organizations.module';
 
 @Module({
     imports: [
@@ -22,10 +21,10 @@ import { TournamentModule } from '../tournaments/tournament.module';
             },
         ]),
         UsersModule,
-        TournamentModule,
+        OrganizationsModule,
     ],
     controllers: [GamesController, GamesGatewayDoc],
-    providers: [GamesService, GamesRepository, GamesGateway, GameProcessService, ChatExtention],
+    providers: [GamesService, GamesRepository, GamesGateway, GameProcessService],
     exports: [GamesService, GamesRepository],
 })
 export class GamesModule {}

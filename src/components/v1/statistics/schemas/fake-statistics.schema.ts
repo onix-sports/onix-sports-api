@@ -4,6 +4,7 @@ import { ObjectId } from 'mongodb';
 import userConstants from '@components/v1/users/user-constants';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { ApiProperty } from '@nestjs/swagger';
+import { organizationsConstants } from '@components/v1/organizations/organizations.constants';
 import statisticsConstants from '../statistics-constants';
 
 @Schema({
@@ -72,6 +73,9 @@ export class FakeStatistic {
     @ApiProperty()
     @Prop({ default: false })
     enabled: Boolean;
+
+    @Prop({ ref: organizationsConstants.models.organizations })
+    organization: ObjectId;
 }
 
 export type FakeStatisticEntity = FakeStatistic & Document;

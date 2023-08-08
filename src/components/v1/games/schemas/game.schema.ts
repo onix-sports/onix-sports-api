@@ -6,6 +6,7 @@ import userConstants from '@components/v1/users/user-constants';
 import { TournamentConstants } from '@components/v1/tournaments/tournament.constants';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { ApiProperty } from '@nestjs/swagger';
+import { organizationsConstants } from '@components/v1/organizations/organizations.constants';
 import { GameStatus } from '../enum/game-status.enum';
 import { Teams } from '../enum/teams.enum';
 import gameConstants from '../games-constants';
@@ -63,6 +64,12 @@ export class Game {
     @ApiProperty()
     @Prop({ type: ObjectId, ref: TournamentConstants.models.tournaments })
     tournament: any;
+
+    @Prop({ ref: organizationsConstants.models.organizations })
+    organization: ObjectId;
+
+    @Prop({ ref: userConstants.models.users })
+    moderator: ObjectId;
 }
 
 export type GameEntity = Game & Document;

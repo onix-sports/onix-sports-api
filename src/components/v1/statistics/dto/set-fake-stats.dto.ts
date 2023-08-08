@@ -1,5 +1,6 @@
+import { toObjectId } from '@components/v1/common/transforms/to-object-id.transform';
 import { ApiProperty } from '@nestjs/swagger';
-import { Transform } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import {
     IsBoolean, IsDefined, IsNumber, IsString,
 } from 'class-validator';
@@ -67,9 +68,10 @@ export default class FakeStatsDto {
     games: Number;
 
     @ApiProperty({ type: String })
+    @Type(() => String)
     @IsDefined()
-    @Transform(({ value }) => new ObjectId(value))
-    user: any;
+    @Transform(toObjectId)
+    user: ObjectId;
 
     @ApiProperty({ type: String })
     @IsDefined()
@@ -80,4 +82,9 @@ export default class FakeStatsDto {
     @IsDefined()
     @IsBoolean()
     enabled: Boolean;
+
+    @ApiProperty()
+    @Type(() => String)
+    @Transform(toObjectId)
+    organization: ObjectId;
 }

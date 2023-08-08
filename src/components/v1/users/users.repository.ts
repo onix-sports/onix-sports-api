@@ -1,5 +1,5 @@
 import { InjectModel } from '@nestjs/mongoose';
-import { FilterQuery, Model } from 'mongoose';
+import { FilterQuery, Model, UpdateQuery } from 'mongoose';
 import { ObjectId } from 'mongodb';
 import { Injectable } from '@nestjs/common';
 import SignUpDto from '@components/v1/auth/dto/sign-up.dto';
@@ -47,7 +47,31 @@ export default class UsersRepository {
         return this.userModel.find(filter, { password: 0 });
     }
 
+    getByOrganization(organization: ObjectId, limit?: number, skip?: number) {
+        return this.userModel.find({ organizations: organization }, { password: 0 }, { skip, limit });
+    }
+
     set(filter: FilterQuery<UserEntity>, $set: any) {
         return this.userModel.findOneAndUpdate(filter, { $set });
+    }
+
+    update(filter: FilterQuery<UserEntity>, update: UpdateQuery<UserEntity>) {
+        return this.userModel.findOneAndUpdate(filter, update);
+    }
+
+    updateMany(filter: FilterQuery<UserEntity>, update: UpdateQuery<UserEntity>) {
+        return this.userModel.updateMany(filter, update);
+    }
+
+    addOrganization(user: ObjectId, organization: ObjectId) {
+        return this.userModel.findOneAndUpdate({ _id: user }, { $addToSet: { organizations: organization } }, { new: true });
+    }
+
+    removeOrganization(user: ObjectId, organization: ObjectId) {
+        return this.userModel.findOneAndUpdate({ _id: user }, { $pull: { organizations: organization } }, { new: true });
+    }
+
+    removeOrganizationFromAllUsers(organization: ObjectId) {
+        return this.userModel.updateMany({ organizations: organization }, { $pull: { organizations: organization } });
     }
 }

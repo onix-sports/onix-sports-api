@@ -15,6 +15,14 @@ export class GamesGatewayDoc {
   @Post('goal')
   goal() {}
 
+  @ApiBody({ type: GameEventDto })
+  @Post('join')
+  join() {}
+
+  @ApiBody({ type: GameEventDto })
+  @Post('finish')
+  finish() {}
+
   @ApiBody({ type: GameIdDto })
   @Post('pause')
   pause() {}

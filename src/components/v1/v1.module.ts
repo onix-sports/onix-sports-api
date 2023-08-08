@@ -8,6 +8,7 @@ import { TournamentModule } from '@components/v1/tournaments/tournament.module';
 import { SeassonsModule } from '@components/v1/seassons/seassons.module';
 import { AuthModule } from '@components/v1/auth/auth.module';
 import { AdminModule } from './admin/admin.module';
+import { OrganizationsModule } from './organizations/organizations.module';
 
 @Module({
     imports: [
@@ -20,6 +21,7 @@ import { AdminModule } from './admin/admin.module';
         SeassonsModule,
         AdminModule,
         AuthModule,
+        OrganizationsModule,
     ],
 })
 export default class V1Module {}

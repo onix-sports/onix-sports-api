@@ -3,7 +3,8 @@ import JwtPayloadDto from '@components/v1/auth/dto/jwt-payload.dto';
 
 const RequestUser = createParamDecorator(
     (data: unknown, ctx: ExecutionContext) => {
-        const request = ctx.switchToHttp().getRequest();
+        const request = ctx.switchToHttp().getRequest() || ctx.switchToWs().getClient();
+
         return request.user as JwtPayloadDto;
     },
 );

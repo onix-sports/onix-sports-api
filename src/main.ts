@@ -4,6 +4,8 @@ import { VersioningType } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import validationPipe from '@pipes/validation.pipe';
+import cookieParser from 'cookie-parser';
+import { LoggingInterceptor } from '@interceptors/logging.interceptor';
 import { AppModule } from './components/app/app.module';
 
 // const { version } = require('../package.json');
@@ -14,7 +16,11 @@ async function bootstrap() {
 
     app.useGlobalFilters(new AllExceptionsFilter());
     app.useGlobalPipes(validationPipe);
-    app.useGlobalInterceptors(new WrapResponseInterceptor());
+    app.useGlobalInterceptors(
+        new LoggingInterceptor(),
+        new WrapResponseInterceptor(),
+    );
+    app.use(cookieParser());
 
     app.enableVersioning({
         type: VersioningType.URI,

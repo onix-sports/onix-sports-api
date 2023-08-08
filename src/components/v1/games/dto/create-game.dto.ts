@@ -29,4 +29,6 @@ export default class CreateGameDto {
     @Type(() => String)
     @Transform(toObjectId)
     readonly tournament?: ObjectId;
+
+    readonly organization?: ObjectId;
 }

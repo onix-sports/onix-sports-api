@@ -40,6 +40,9 @@ interface IGame {
     duration?: number;
     tournament?: ObjectId;
     config?: IGameConfig;
+    organization: ObjectId;
+    moderator: ObjectId;
+    posibleWinner?: Teams;
 }
 
 export class Game {
@@ -71,6 +74,10 @@ export class Game {
 
     private tournament: ObjectId | null;
 
+    private organization: ObjectId;
+
+    private moderator: ObjectId;
+
     private config: IGameConfig = {
         maxGoals: 10,
         maxDuration: Number.POSITIVE_INFINITY,
@@ -93,6 +100,9 @@ export class Game {
         this.lastPauseDate = game.lastPauseDate || null;
         this.duration = game.duration || 0;
         this.tournament = game.tournament || null;
+        this.organization = game.organization;
+        this.moderator = game.moderator;
+        this.posibleWinner = game.posibleWinner || null;
 
         if (game.config) {
             this.config = game.config;
@@ -110,7 +120,8 @@ export class Game {
         return new Players(_players);
     }
 
-    public start() {
+    public start(user: ObjectId) {
+        if (this.moderator.toString() !== user.toString()) throw new Error('Only moderator can start the game!');
         if (this.status !== GameStatus.DRAFT) throw new Error('Game has already started or finished!');
 
         this.status = GameStatus.STARTED;
@@ -140,7 +151,8 @@ export class Game {
         }
     }
 
-    public goal(id: any, enemy?: any) {
+    public goal(user: ObjectId, id: any, enemy?: any) {
+        if (this.moderator.toString() !== user.toString()) throw new Error('Only moderator can score a goal!');
         if (this.status === GameStatus.PAUSED) throw new Error('Game has been paused!');
         if (this.status === GameStatus.PENDING) throw new Error('Game is waiting to be finished!');
         if (this.status === GameStatus.FINISHED) throw new Error('Game has been finished!');
@@ -166,7 +178,8 @@ export class Game {
         return this;
     }
 
-    public pause() {
+    public pause(user: ObjectId) {
+        if (this.moderator.toString() !== user.toString()) throw new Error('Only moderator can pause the game!');
         if (this.status === GameStatus.PENDING) throw new Error('Game is waiting to be finished!');
         if (this.status === GameStatus.PAUSED) return this;
         if (this.status === GameStatus.FINISHED) throw new Error('Game has been finished!');
@@ -179,7 +192,8 @@ export class Game {
         return this;
     }
 
-    public unpause() {
+    public unpause(user: ObjectId) {
+        if (this.moderator.toString() !== user.toString()) throw new Error('Only moderator can unpause the game!');
         if (this.status !== GameStatus.PAUSED) return this;
 
         this.status = GameStatus.UNPAUSED;
@@ -189,7 +203,8 @@ export class Game {
         return this;
     }
 
-    public swap(id: any) {
+    public swap(user: ObjectId, id: any) {
+        if (this.moderator.toString() !== user.toString()) throw new Error('Only moderator can swap players!');
         if (this.status === GameStatus.PENDING) throw new Error('Game is waiting to be finished!');
         if (this.status === GameStatus.FINISHED) throw new Error('Game has been finished!');
 
@@ -228,8 +243,8 @@ export class Game {
         });
     }
 
-    public cancel(id: ObjectId) {
-        if (this.status === GameStatus.PENDING) throw new Error('Game is waiting to be finished!');
+    public cancel(user: ObjectId, id: ObjectId) {
+        if (this.moderator.toString() !== user.toString()) throw new Error('Only moderator can cancel actions!');
         if (this.status === GameStatus.FINISHED) throw new Error('Game has been finished!');
         if (this.status === GameStatus.DRAFT) throw new Error('Game has not started yet!');
 
@@ -237,7 +252,7 @@ export class Game {
         const action = this.actions[index];
 
         if (action?.player) {
-            action.player.cancel(action.type, action.player.position);
+            this.players.get(action.player._id).cancel(action.type, action.player.position);
 
             if ([ActionType.MGOAL, ActionType.RGOAL].includes(action.type)) {
                 this.score[action.player.team] -= 1;
@@ -246,10 +261,17 @@ export class Game {
             this.actions.splice(index, 1);
         }
 
+        const noWinner = this.score[Teams.red] !== this.config.maxGoals && this.score[Teams.blue] !== this.config.maxGoals;
+
+        if (noWinner) {
+            this.status = GameStatus.STARTED;
+        }
+
         return this;
     }
 
-    public finish() {
+    public finish(user: ObjectId) {
+        if (this.moderator.toString() !== user.toString()) throw new Error('Only moderator can finish the game!');
         if (this.status !== GameStatus.PENDING) throw new Error('Game can not be finished!');
 
         this.winner = this.posibleWinner;
@@ -279,6 +301,9 @@ export class Game {
             finishedAt: this.finishedAt,
             duration: this.duration,
             tournament: this.tournament,
+            organization: this.organization,
+            moderator: this.moderator,
+            posibleWinner: this.posibleWinner,
         };
     }
 }

@@ -1,3 +1,4 @@
+import { toObjectId } from '@components/v1/common/transforms/to-object-id.transform';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform, Type } from 'class-transformer';
 import { IsNumber, IsOptional } from 'class-validator';
@@ -17,6 +18,6 @@ export class GetGamesDto {
     @ApiPropertyOptional()
     @IsOptional()
     @Type(() => String)
-    @Transform(({ value }) => new ObjectId(value))
+    @Transform(toObjectId)
     tournament?: ObjectId;
 }

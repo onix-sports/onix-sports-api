@@ -1,5 +1,8 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsEnum, IsOptional, IsString } from 'class-validator';
+import {
+    IsEnum, IsOptional, IsString,
+} from 'class-validator';
+import { ObjectId } from 'mongodb';
 import { TournamentType } from '../enum/tour-type.enum';
 
 export class CreateTournamentDto {
@@ -12,4 +15,6 @@ export class CreateTournamentDto {
     @IsOptional()
     @IsEnum(TournamentType)
     readonly type?: TournamentType;
+
+    readonly organization: ObjectId;
 }

@@ -1,5 +1,5 @@
 import { GameEntity } from '@components/v1/games/schemas/game.schema';
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { OnEvent, EventEmitter2 } from '@nestjs/event-emitter';
 import { StatisticsService } from '@components/v1/statistics/services/statistics.service';
 import { ObjectId } from 'mongodb';
@@ -8,17 +8,19 @@ import { TournamentStatus } from './enum/tour-status.enum';
 import { TournamentRepository } from './tournament.repository';
 import { Poll, TelegramData } from './schemas/tournament.schema';
 import { TournamentType } from './enum/tour-type.enum';
+import GamesRepository from '../games/games.repository';
 
 @Injectable()
 export class TournamentService {
     constructor(
         private readonly statisticsService: StatisticsService,
         private readonly tournamentRepository: TournamentRepository,
+        private readonly gamesRepository: GamesRepository,
         private readonly eventEmitter: EventEmitter2,
     ) { }
 
-    create(tournament: CreateTournamentDto) {
-        return this.tournamentRepository.create(tournament);
+    create(tournament: CreateTournamentDto, creator: ObjectId) {
+        return this.tournamentRepository.create({ ...tournament, creator, moderator: creator });
     }
 
     getMany(query: any) {
@@ -27,6 +29,16 @@ export class TournamentService {
 
     getOne(id: ObjectId) {
         return this.tournamentRepository.getById(id);
+    }
+
+    async getTournamentsByOrganizations(ids: ObjectId[], organizations: ObjectId[]) {
+        const [tournament] = await this.tournamentRepository.getTournamentByOrganizations(ids, organizations);
+
+        if (!tournament) {
+            throw new NotFoundException('Tournament not found!');
+        }
+
+        return tournament;
     }
 
     @OnEvent('tournaments.find')
@@ -67,7 +79,13 @@ export class TournamentService {
         return tournament.save();
     }
 
-    async closeTournament(id: ObjectId) {
+    async closeTournament(id: ObjectId, creator: ObjectId) {
+        const tournamentFound = await this.tournamentRepository.getTournamentByCreator(id, creator);
+
+        if (!tournamentFound) {
+            throw new NotFoundException('Tournament not found!');
+        }
+
         const performance = await this.statisticsService.getTournamentPerform(id);
 
         this.eventEmitter.emitAsync('tournament.closed', { performance, tournamentId: id });
@@ -111,5 +129,20 @@ export class TournamentService {
 
     makeCustom(id: ObjectId) {
         return this.tournamentRepository.updateById(id, { $set: { type: TournamentType.CUSTOM } });
+    }
+
+    @OnEvent('tournament.game.created', { async: true })
+    async handleGameCreate({ tournament }: { tournament: ObjectId }) {
+        await this.makeCustom(tournament);
+    }
+
+    async changeModerator(tournament: ObjectId, currentModerator: ObjectId, moderator: ObjectId) {
+        const result = await this.tournamentRepository.changeModerator(tournament, currentModerator, moderator);
+
+        if (!result.matchedCount) {
+            throw new NotFoundException('Tournament not found!');
+        }
+
+        await this.gamesRepository.changeModerator(tournament, moderator);
     }
 }

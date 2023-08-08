@@ -12,9 +12,9 @@ export default class WrapResponseInterceptor implements NestInterceptor {
     intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
         return next.handle().pipe(
             map((...args) => {
-                return {
+                return ({
                     data: args[0],
-                };
+                });
             }),
         );
     }

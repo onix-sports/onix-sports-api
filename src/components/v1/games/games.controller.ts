@@ -2,15 +2,18 @@ import { ApiDefaultBadRequestResponse } from '@decorators/api-default-bad-reques
 import { ApiDefaultNotFoundResponse } from '@decorators/api-default-not-found-response.decorator';
 import { ApiResponse } from '@decorators/api-response.decorator';
 import Authorized from '@decorators/authorized.decorator';
-import { RolesEnum } from '@decorators/roles.decorator';
+import RequestUser from '@decorators/request-user.decorator';
+import OrganizationGuard from '@guards/organization.guard';
 import {
-    Body, Controller, Get, HttpCode, HttpStatus, Param, Post, Query,
+    Body, Controller, Get, HttpCode, HttpStatus, Param, Post, Query, UseGuards,
 } from '@nestjs/common';
 import { ApiExtraModels, ApiTags, getSchemaPath } from '@nestjs/swagger';
 import { SchemaObject } from '@nestjs/swagger/dist/interfaces/open-api-spec.interface';
 import validationPipe from '@pipes/validation.pipe';
 import { ObjectId } from 'mongodb';
-import { TournamentService } from '../tournaments/tournament.service';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import SelectedOrganization from '@decorators/selected-organization.decorator';
+import JwtPayloadDto from '../auth/dto/jwt-payload.dto';
 import CreateGamesDto from './dto/create-game.dto';
 import { GetGameDto } from './dto/get-game.dto';
 import { GetGamesDto } from './dto/get-games.dto';
@@ -23,7 +26,7 @@ import { Game } from './schemas/game.schema';
 export class GamesController {
     constructor(
     private readonly gameService: GamesService,
-    private readonly tournamentService: TournamentService,
+    private readonly eventEmitter: EventEmitter2,
     ) {}
 
     @ApiResponse({
@@ -52,17 +55,23 @@ export class GamesController {
     })
     @ApiDefaultBadRequestResponse()
     @ApiDefaultNotFoundResponse([
-        `Tournament with id ${new ObjectId()} was not found`,
-        `Player with id ${new ObjectId()} was not found`,
+        `Tournament with id ${new ObjectId().toString()} was not found`,
+        `Player with id ${new ObjectId().toString()} was not found`,
+        `Organization with id ${new ObjectId().toString()} was not found`,
     ])
     @HttpCode(HttpStatus.CREATED)
-    @Authorized(RolesEnum.admin)
+    @UseGuards(OrganizationGuard)
+    @Authorized()
     @Post('/')
-    public async createGames(@Body() gamesDto: CreateGamesDto) {
-        const games = await this.gameService.createGames(gamesDto);
+    public async createGames(
+        @Body() gamesDto: CreateGamesDto,
+        @RequestUser() user: JwtPayloadDto,
+        @SelectedOrganization() organization: ObjectId,
+    ) {
+        const games = await this.gameService.createGames({ ...gamesDto, organization }, user._id);
 
         if (gamesDto.tournament) {
-            await this.tournamentService.makeCustom(gamesDto.tournament);
+            await this.eventEmitter.emitAsync('tournament.game.created', { tournament: gamesDto.tournament });
         }
 
         return games;
@@ -80,10 +89,13 @@ export class GamesController {
     })
     @ApiDefaultBadRequestResponse()
     @HttpCode(HttpStatus.OK)
+    @UseGuards(OrganizationGuard)
+    @Authorized()
     @Get('/')
     public async getGames(
         @Query(validationPipe) { tournament, limit, skip }: GetGamesDto,
+        @SelectedOrganization() organization: ObjectId,
     ) {
-        return this.gameService.getGames({ tournament }, limit, skip);
+        return this.gameService.getGames({ tournament, organization }, limit, skip);
     }
 }

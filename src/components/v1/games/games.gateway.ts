@@ -3,14 +3,17 @@ import { Logger, UseFilters } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import {
     ConnectedSocket,
-    MessageBody, OnGatewayInit, SubscribeMessage, WebSocketGateway, WebSocketServer, WsResponse,
+    MessageBody, OnGatewayInit, SubscribeMessage, WebSocketGateway, WebSocketServer,
 } from '@nestjs/websockets';
 import validationPipe from '@pipes/validation.pipe';
 import { Server, Socket } from 'socket.io';
+import RequestUser from '@decorators/request-user.decorator';
+import WsAuthorized from '@decorators/ws-authorized.decorator';
 import { GameEventDto } from './dto/game-event.dto';
 import { GameIdDto } from './dto/start-game.dto';
 import { GameProcessService } from './game-process.service';
 import { IFinish } from './interfaces/games-gateway.interfaces';
+import JwtPayloadDto from '../auth/dto/jwt-payload.dto';
 
 @UseFilters(new WsExceptionFilter())
 @WebSocketGateway({ transports: ['websocket'] })
@@ -43,65 +46,79 @@ export class GamesGateway implements OnGatewayInit {
         this.server.to(gameId.toString()).emit('pending', { id: gameId, info });
     }
 
+    @WsAuthorized()
     @SubscribeMessage('start')
-    public async start(@MessageBody(validationPipe) { id }: GameIdDto): Promise<void> {
-        await this.gameProcessService.start(id);
+    public async start(@MessageBody(validationPipe) { id }: GameIdDto, @RequestUser() user: JwtPayloadDto): Promise<void> {
+        await this.gameProcessService.start(user._id, id);
 
         const data = await this.gameProcessService.info(id);
+
+        this.logger.log(`Game ${id} started`);
 
         this.server.to(id.toString()).emit('data', data);
         this.eventEmitter.emit('game.started', { id, info: data });
     }
 
+    @WsAuthorized()
     @SubscribeMessage('goal')
-    public async goal(@MessageBody() { id, playerId, enemyId }: GameEventDto): Promise<void> {
-        const data = await this.gameProcessService.goal(id, playerId, enemyId);
+    public async goal(@MessageBody() { id, playerId, enemyId }: GameEventDto, @RequestUser() user: JwtPayloadDto): Promise<void> {
+        const data = await this.gameProcessService.goal(user._id, id, playerId, enemyId);
 
         this.server.to(id.toString()).emit('data', data);
     }
 
+    @WsAuthorized()
     @SubscribeMessage('pause')
-    public async pause(@MessageBody(validationPipe) { id }: GameEventDto): Promise<void> {
-        const data = await this.gameProcessService.pause(id);
+    public async pause(@MessageBody(validationPipe) { id }: GameEventDto, @RequestUser() user: JwtPayloadDto): Promise<void> {
+        const data = await this.gameProcessService.pause(user._id, id);
 
         this.server.to(id.toString()).emit('data', data);
     }
 
+    @WsAuthorized()
     @SubscribeMessage('cancel')
-    public async cancel(@MessageBody(validationPipe) { id, actionId }: GameEventDto): Promise<void> {
-        const data = await this.gameProcessService.cancel(id, actionId);
+    public async cancel(@MessageBody(validationPipe) { id, actionId }: GameEventDto, @RequestUser() user: JwtPayloadDto): Promise<void> {
+        const data = await this.gameProcessService.cancel(user._id, id, actionId);
 
         this.server.to(id.toString()).emit('data', data);
     }
 
+    @WsAuthorized()
     @SubscribeMessage('swap')
-    public async swap(@MessageBody() { id, playerId }: GameEventDto): Promise<void> {
-        const data = await this.gameProcessService.swap(id, playerId);
+    public async swap(@MessageBody() { id, playerId }: GameEventDto, @RequestUser() user: JwtPayloadDto): Promise<void> {
+        const data = await this.gameProcessService.swap(user._id, id, playerId);
 
         this.server.to(id.toString()).emit('data', data);
     }
 
+    @WsAuthorized()
     @SubscribeMessage('finish')
-    public async finish(@MessageBody() { id }: GameEventDto): Promise<void> {
-        const data = await this.gameProcessService.finish(id);
+    public async finish(@MessageBody() { id }: GameEventDto, @RequestUser() user: JwtPayloadDto): Promise<void> {
+        const data = await this.gameProcessService.finish(user._id, id);
 
         this.server.to(id.toString()).emit('data', data);
         this.server.socketsLeave(id.toString());
     }
 
     @SubscribeMessage('data')
-    public async data(@MessageBody(validationPipe) { id }: GameEventDto): Promise<WsResponse<any>> {
+    public async data(@MessageBody(validationPipe) { id }: GameEventDto) {
         const data = await this.gameProcessService.info(id);
 
-        return { event: 'data', data };
+        this.server.to(id.toString()).emit('data', data);
     }
 
     @SubscribeMessage('join')
-    public async join(@MessageBody(validationPipe) { id }: GameEventDto, @ConnectedSocket() client: Socket): Promise<WsResponse<any>> {
-        const data = await this.gameProcessService.info(id);
-
+    public async join(@MessageBody(validationPipe) { id }: GameEventDto, @ConnectedSocket() client: Socket) {
         await client.join(id.toString());
 
-        return { event: 'data', data };
+        const data = await this.gameProcessService.info(id).catch(() => null);
+
+        if (data) {
+            this.server.to(id.toString()).emit('data', data);
+        }
+
+        this.logger.log(`Client ${client.id} connected to the Game ${id}`);
+
+        return {};
     }
 }
