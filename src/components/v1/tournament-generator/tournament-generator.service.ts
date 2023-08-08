@@ -4,8 +4,6 @@ import { UsersService } from '@components/v1/users/users.service';
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { ObjectId } from 'mongodb';
-import { Document } from 'mongoose';
-import { Tournament } from '@components/v1/tournaments/schemas/tournament.schema';
 import { TournamentService } from '@components/v1/tournaments/tournament.service';
 import { Reflector } from '@nestjs/core';
 import { setTimeout } from 'timers/promises';
@@ -80,7 +78,7 @@ export class TournamentGenerator {
         return this.plans[count]?.generate || this.getPlan(count - 1);
     }
 
-    private async checkPlayers(ids: ObjectId[]) {
+    private async checkPlayers(ids: ObjectId[], organization: ObjectId) {
         const _ids = ids.map((id) => id.toString());
 
         if (_ids.length !== new Set(_ids).size) {
@@ -88,7 +86,7 @@ export class TournamentGenerator {
         }
 
         return this.userRepository
-            .get({ _id: { $in: ids } })
+            .get({ _id: { $in: ids }, organizations: organization })
             .then((foundPlayers: UserEntity[]) => {
                 ids.forEach((id) => {
                     const ids = foundPlayers.map(({ _id }: UserEntity) => _id.toString());
@@ -107,18 +105,18 @@ export class TournamentGenerator {
             .map((a) => a.value);
     }
 
-    public async generate(ids: ObjectId[], _title?: string) {
-        await this.checkPlayers(ids);
+    public async generate(ids: ObjectId[], organization: ObjectId, creator: ObjectId, _title?: string) {
+        await this.checkPlayers(ids, organization);
 
         const gamesPlan = this.getPlan(ids.length);
 
-        let tournament: (Tournament & Document & Document<any, any>) | null = await this.tournamentService.create({ title: _title });
+        let tournament = await this.tournamentService.create({ title: _title, organization }, creator);
 
         const players = await Promise.all(ids.map((id: ObjectId) => this.userService.getUser(id))) as UserEntity[];
         const shuffled = this.shuffle<UserEntity>(players);
         const { type, games: _games, teams }: any = gamesPlan(shuffled);
 
-        const games = await this.generateGames(_games, tournament?._id);
+        const games = await this.generateGames(_games, creator, organization, tournament._id);
 
         await tournament.update({ type });
 
@@ -131,14 +129,16 @@ export class TournamentGenerator {
         return { games, tournament, teams };
     }
 
-    private async generateGames(games: any[], tournament: ObjectId) {
+    private async generateGames(games: any[], moderator: ObjectId, organization: ObjectId, tournament: ObjectId) {
         const _games = games.map((game: any) => ({
             ...game,
             players: game.players.map((player: any) => player._id.toString()),
+            organization,
             tournament,
+            moderator,
         }));
 
-        return this.gameService.createGames(_games, { _id: 1, name: 1 });
+        return this.gameService.createGames(_games, moderator, { _id: 1, name: 1 });
     }
 
     @OnEvent('game.finished.after')
@@ -176,6 +176,6 @@ export class TournamentGenerator {
 
         if (games.length === 0) return;
 
-        await this.generateGames(games, tournament._id);
+        await this.generateGames(games, tournament.moderator, tournament.organization, tournament._id);
     }
 }

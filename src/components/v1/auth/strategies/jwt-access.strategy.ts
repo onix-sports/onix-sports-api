@@ -17,9 +17,10 @@ export default class JwtAccessStrategy extends PassportStrategy(Strategy, 'acces
         });
     }
 
-    async validate(payload: JwtPayloadDto): Promise<any> {
+    async validate(payload: JwtPayloadDto): Promise<JwtPayloadDto> {
         return {
             ...payload,
+            organizations: payload.organizations.map((id) => new ObjectId(id)),
             _id: new ObjectId(payload._id),
         };
     }

@@ -75,6 +75,8 @@ export default class GamesRepository {
 
             _game.id = new ObjectId(_game.id);
             _game.tournament = new ObjectId(_game.tournament);
+            _game.organization = new ObjectId(_game.organization);
+            _game.moderator = new ObjectId(_game.moderator);
             _game.startedAt = _game.startedAt && new Date(_game.startedAt);
             _game.finishedAt = _game.finishedAt && new Date(_game.finishedAt);
             _game.lastPauseDate = _game.lastPauseDate && new Date(_game.lastPauseDate);
@@ -88,5 +90,9 @@ export default class GamesRepository {
 
     delete(id: ObjectId) {
         return this.redisClient.del(id.toString());
+    }
+
+    changeModerator(tournament: ObjectId, moderator: ObjectId) {
+        return this.gameModel.updateMany({ tournament, status: GameStatus.FINISHED }, { $set: { moderator } });
     }
 }

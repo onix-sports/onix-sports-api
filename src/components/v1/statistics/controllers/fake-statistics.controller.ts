@@ -1,5 +1,5 @@
 import {
-    Body, Controller, Get, HttpCode, HttpStatus, Patch,
+    Body, Controller, Get, HttpCode, HttpStatus, Patch, Query,
 } from '@nestjs/common';
 import { ApiExtraModels, ApiTags, getSchemaPath } from '@nestjs/swagger';
 import { ApiDefaultBadRequestResponse } from '@decorators/api-default-bad-request-response.decorator';
@@ -7,9 +7,11 @@ import { ApiResponse } from '@decorators/api-response.decorator';
 import { SchemaObject } from '@nestjs/swagger/dist/interfaces/open-api-spec.interface';
 import Authorized from '@decorators/authorized.decorator';
 import { RolesEnum } from '@decorators/roles.decorator';
+import validationPipe from '@pipes/validation.pipe';
 import FakeStatsDto from '../dto/set-fake-stats.dto';
 import { FakeStatisticsService } from '../services/fake-statistics.service';
 import { FakeStatistic } from '../schemas/fake-statistics.schema';
+import { GetFakeStatsDto } from '../dto/get-fake-stats.dto';
 
 @ApiTags('Fake statistics')
 @ApiExtraModels(FakeStatistic)
@@ -32,8 +34,8 @@ export class FakeStatisticsController {
     })
     @HttpCode(HttpStatus.OK)
     @Get('/')
-    public getStats() {
-        return this.fakeStatisticsService.getStats();
+    public getStats(@Query(validationPipe) { organization }: GetFakeStatsDto) {
+        return this.fakeStatisticsService.getStats(organization);
     }
 
     @ApiResponse({
@@ -46,7 +48,7 @@ export class FakeStatisticsController {
     @ApiDefaultBadRequestResponse()
     @HttpCode(HttpStatus.OK)
     @Patch('/')
-    public setStats(@Body() { user, ...fakeStatsDto }: FakeStatsDto) {
-        return this.fakeStatisticsService.setStats(user, { ...fakeStatsDto });
+    public setStats(@Body() { organization, user, ...fakeStatsDto }: FakeStatsDto) {
+        return this.fakeStatisticsService.setStats(organization, user, { ...fakeStatsDto });
     }
 }

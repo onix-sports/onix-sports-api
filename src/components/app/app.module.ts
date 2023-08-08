@@ -6,6 +6,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { ScheduleModule } from '@nestjs/schedule';
 import V1Module from '@components/v1/v1.module';
 import { RedisModule } from '@liaoliaots/nestjs-redis';
+import { UtilsModule } from '@components/utils/utils.module';
 import { AppService } from './app.service';
 import { AppController } from './app.controller';
 
@@ -33,6 +34,7 @@ import { AppController } from './app.controller';
         ScheduleModule.forRoot(),
         MainPuppeteerModule.forRoot(),
         V1Module,
+        UtilsModule,
     ],
     controllers: [AppController],
     providers: [AppService],

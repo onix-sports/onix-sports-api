@@ -125,7 +125,8 @@ export class TournamentListener extends NotificationListener {
             return ctx.reply('You have to request tournament first.');
         }
 
-        await this.tournamentGenerator.generate(request.players)
+        // @TODO: Make posibility to choose organization
+        await this.tournamentGenerator.generate(request.players, user.organizations[0], user._id)
             .then(() => {
                 this.notificationService.closePoll(ctx.chat.id, request.messageId);
 

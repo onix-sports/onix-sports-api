@@ -4,6 +4,7 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
 import { ObjectId } from 'mongodb';
 import { ApiProperty } from '@nestjs/swagger';
+import { organizationsConstants } from '@components/v1/organizations/organizations.constants';
 import { TournamentConstants as tournamentConstants } from '../tournament.constants';
 import { TournamentStatus } from '../enum/tour-status.enum';
 import { TournamentType } from '../enum/tour-type.enum';
@@ -70,6 +71,15 @@ export class Tournament {
     @ApiProperty()
     @Prop({ type: {} as Poll | null, default: null })
     telegram: TelegramData | null;
+
+    @Prop({ ref: organizationsConstants.models.organizations })
+    organization: ObjectId;
+
+    @Prop({ ref: userConstants.models.users })
+    creator: ObjectId;
+
+    @Prop({ ref: userConstants.models.users })
+    moderator: ObjectId;
 }
 
 export type TournamentDocument = Tournament & Document;

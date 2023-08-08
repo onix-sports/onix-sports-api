@@ -2,10 +2,14 @@ import { ApiDefaultBadRequestResponse } from '@decorators/api-default-bad-reques
 import { ApiDefaultNotFoundResponse } from '@decorators/api-default-not-found-response.decorator';
 import { ApiResponse } from '@decorators/api-response.decorator';
 import {
-    Controller, Get, HttpCode, HttpStatus, Param, Query,
+    Controller, Get, HttpCode, HttpStatus, Param, Query, UseGuards,
 } from '@nestjs/common';
 import { ApiExtraModels, ApiTags, getSchemaPath } from '@nestjs/swagger';
 import validationPipe from '@pipes/validation.pipe';
+import SelectedOrganization from '@decorators/selected-organization.decorator';
+import { ObjectId } from 'mongodb';
+import Authorized from '@decorators/authorized.decorator';
+import OrganizationGuard from '@guards/organization.guard';
 import { GetLeaderboardDto } from '../dto/get-leaderboard.dto';
 import { GetProfileDto } from '../dto/get-profile.dto';
 import { GetStatsDto } from '../dto/get-stats.dto';
@@ -34,9 +38,11 @@ export class StatisticsController {
     })
     @ApiDefaultBadRequestResponse()
     @HttpCode(HttpStatus.OK)
+    @UseGuards(OrganizationGuard)
+    @Authorized()
     @Get('/')
-    public getStats(@Query(validationPipe) { ids, dateFrom, dateTo }: GetStatsDto) {
-        return this.statisticService.getStatsPeriod(ids, dateFrom, dateTo);
+    public getStats(@Query(validationPipe) { ids, dateFrom, dateTo }: GetStatsDto, @SelectedOrganization() organization: ObjectId) {
+        return this.statisticService.getStatsPeriod(organization, ids, dateFrom, dateTo);
     }
 
     @ApiResponse({
@@ -51,9 +57,11 @@ export class StatisticsController {
     })
     @ApiDefaultBadRequestResponse()
     @HttpCode(HttpStatus.OK)
+    @UseGuards(OrganizationGuard)
+    @Authorized()
     @Get('/leaderboard')
-    public getLeaderboard(@Query(validationPipe) { dateFrom, dateTo }: GetLeaderboardDto) {
-        return this.statisticService.getLeaderboard(dateFrom, dateTo);
+    public getLeaderboard(@Query(validationPipe) { dateFrom, dateTo }: GetLeaderboardDto, @SelectedOrganization() organization: ObjectId) {
+        return this.statisticService.getLeaderboard(organization, dateFrom, dateTo);
     }
 
     @ApiResponse({

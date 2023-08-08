@@ -7,10 +7,12 @@ import { TournamentConstants } from './tournament.constants';
 import { TournamentController } from './tournament.controller';
 import { TournamentRepository } from './tournament.repository';
 import { TournamentService } from './tournament.service';
+import { GamesModule } from '../games/games.module';
 
 @Module({
     imports: [
         UsersModule,
+        GamesModule,
         MongooseModule.forFeature([
             {
                 name: TournamentConstants.models.tournaments,

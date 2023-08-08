@@ -2,6 +2,9 @@ export const organizationsConstants = {
     models: {
         organizations: 'organizations',
         organizationInvite: 'organizationinvite',
-        organizationDeleteLog: 'organizationdeletelog',
+    },
+    invites: {
+        tokenLength: 6,
+        tokenDuration: 1000 * 60 * 60,
     },
 };

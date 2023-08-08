@@ -21,6 +21,10 @@ export class UsersService {
         return this.usersRepository.get({ _id: { $in: ids } });
     }
 
+    getOrganizationUsers(organization: ObjectId, limit: number = 0, skip: number = 0) {
+        return this.usersRepository.getByOrganization(organization, limit, skip);
+    }
+
     async updateTelegramData(telegramId: number, username: string | undefined, telegram: any): Promise<UserEntity> {
         const user = await this.usersRepository.set({
             $or: [

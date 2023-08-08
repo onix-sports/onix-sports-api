@@ -3,12 +3,12 @@ import { ForbiddenException, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { UserEntity } from '@components/v1/users/schemas/user.schema';
+import { ObjectId } from 'mongodb';
 import JwtPayloadDto from './dto/jwt-payload.dto';
 import UserCreateDto from './dto/user-create.dto';
 import authConstants from './auth.constants';
 import AuthRepository from './auth.repository';
 import LoginDto from './dto/login.dto';
-import { ObjectId } from 'mongodb';
 
 @Injectable()
 export class AuthService {

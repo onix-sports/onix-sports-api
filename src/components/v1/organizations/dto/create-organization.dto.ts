@@ -1,10 +1,12 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
-    IsOptional, IsString, IsUrl, MaxLength, MinLength,
+    IsDefined,
+    IsOptional, IsString, MaxLength, MinLength,
 } from 'class-validator';
 
 export class CreateOrganizationDto {
     @ApiProperty({ type: String, description: 'Organization title' })
+    @IsDefined()
     @IsString()
     @MinLength(1)
     @MaxLength(80)
@@ -13,6 +15,5 @@ export class CreateOrganizationDto {
     @ApiPropertyOptional({ type: String, description: 'Organization image' })
     @IsOptional()
     @IsString()
-    @IsUrl()
-    image: string = '';
+    image?: string = '';
 }

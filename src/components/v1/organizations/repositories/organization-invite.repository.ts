@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { ObjectId } from 'mongodb';
-import { FilterQuery, Model } from 'mongoose';
+import { Model } from 'mongoose';
+import { OrganizationInviteStatusEnum } from '../enums/organization-invite-status.enum';
 import { organizationsConstants } from '../organizations.constants';
 import { OrganizationInviteEntity } from '../schemas/organization-invite.schema';
 
@@ -13,21 +14,52 @@ export class OrganizationInviteRepository {
     ) {}
 
     create(user: ObjectId, organization: ObjectId) {
-        return this.organizationsInviteModel.create({
-            invitedUser: user,
-            organization,
-        });
+        return this.organizationsInviteModel.findOneAndUpdate(
+            {
+                status: OrganizationInviteStatusEnum.PENDING,
+                invitedUser: user,
+                organization,
+            },
+            {
+                invitedUser: user,
+                organization,
+            },
+            {
+                upsert: true,
+                new: true,
+            },
+        );
     }
 
-    findOne(query: FilterQuery<OrganizationInviteEntity>) {
-        return this.organizationsInviteModel.findOne(query);
+    acceptInvite(user: ObjectId, invite: ObjectId) {
+        return this.organizationsInviteModel.findOneAndUpdate(
+            {
+                _id: invite,
+                invitedUser: user,
+                status: OrganizationInviteStatusEnum.PENDING,
+            },
+            {
+                status: OrganizationInviteStatusEnum.ACCEPTED,
+            },
+        );
     }
 
-    findOneAndUpdate(query: FilterQuery<OrganizationInviteEntity>, update: Partial<OrganizationInviteEntity>) {
-        return this.organizationsInviteModel.findOneAndUpdate(query, update);
+    declineInvite(user: ObjectId, invite: ObjectId) {
+        return this.organizationsInviteModel.findOneAndUpdate(
+            {
+                _id: invite,
+                invitedUser: user,
+                status: OrganizationInviteStatusEnum.PENDING,
+            },
+            {
+                status: OrganizationInviteStatusEnum.DECLINED,
+            },
+        );
     }
 
-    find(query: FilterQuery<OrganizationInviteEntity>) {
-        return this.organizationsInviteModel.find(query);
+    getUserInvites(user: ObjectId) {
+        return this.organizationsInviteModel
+            .find({ invitedUser: user, status: OrganizationInviteStatusEnum.PENDING })
+            .populate('organization', { title: 1, _id: 1 });
     }
 }

@@ -3,21 +3,28 @@ import { ApiDefaultNotFoundResponse } from '@decorators/api-default-not-found-re
 import { ApiResponse } from '@decorators/api-response.decorator';
 import Authorized from '@decorators/authorized.decorator';
 import RequestUser from '@decorators/request-user.decorator';
+import UpdateJwtResponseInterceptor from '@interceptors/update-jwt-response.interceptor';
 import {
-    Body, Controller, Delete, Get, HttpCode, HttpStatus, Post,
+    Body, Controller, Delete, ForbiddenException, Get, HttpCode, HttpStatus, Param, Patch, Post, Put, Res, UseGuards, UseInterceptors,
 } from '@nestjs/common';
 import { ApiExtraModels, ApiTags, getSchemaPath } from '@nestjs/swagger';
 import { SchemaObject } from '@nestjs/swagger/dist/interfaces/open-api-spec.interface';
+import { Response } from 'express';
+import validationPipe from '@pipes/validation.pipe';
+import SelectedOrganization from '@decorators/selected-organization.decorator';
+import { ObjectId } from 'mongodb';
+import OrganizationGuard from '@guards/organization.guard';
 import JwtPayloadDto from '../auth/dto/jwt-payload.dto';
 import { AcceptInviteDto } from './dto/accept-invite.dto';
 import { CreateOrganizationDto } from './dto/create-organization.dto';
-import { DeleteOrganizationDto } from './dto/delete-organization.dto';
 import { InviteToOrganizationDto } from './dto/invite-to-organization.dto';
 import { KickFromOrganizationDto } from './dto/kick-from-organization.dto';
-import { LeaveFromOrganizationDto } from './dto/leave-from-organization.dto';
+import { UpdateOrganizationDto } from './dto/update-organization.dto';
 import { OrganizationsService } from './organizations.service';
 import { OrganizationInvite } from './schemas/organization-invite.schema';
 import { Organization } from './schemas/organizations.schema';
+import { SelectOrganizationDto } from './dto/select-organization.dto';
+import { JoinDto } from './dto/join.dto';
 
 @ApiTags('Organizations')
 @ApiExtraModels(Organization)
@@ -36,6 +43,7 @@ export class OrganizationsController {
     })
     @ApiDefaultBadRequestResponse()
     @HttpCode(HttpStatus.CREATED)
+    @UseInterceptors(new UpdateJwtResponseInterceptor())
     @Authorized()
     @Post()
     create(@Body() body: CreateOrganizationDto, @RequestUser() user: JwtPayloadDto) {
@@ -48,10 +56,11 @@ export class OrganizationsController {
     @ApiDefaultBadRequestResponse()
     @ApiDefaultNotFoundResponse('Organization not found!')
     @HttpCode(HttpStatus.NO_CONTENT)
+    @UseGuards(OrganizationGuard)
     @Authorized()
     @Delete()
-    delete(@Body() body: DeleteOrganizationDto, @RequestUser() user: JwtPayloadDto) {
-        return this.organizationsService.delete(user._id, body.organization);
+    delete(@RequestUser() user: JwtPayloadDto, @SelectedOrganization() organization: ObjectId) {
+        return this.organizationsService.delete(user._id, organization);
     }
 
     @ApiResponse({
@@ -67,7 +76,7 @@ export class OrganizationsController {
     @HttpCode(HttpStatus.OK)
     @Get()
     find() {
-        return this.organizationsService.find();
+        return this.organizationsService.getByPagination();
     }
 
     @ApiResponse({
@@ -95,12 +104,20 @@ export class OrganizationsController {
         description: 'Creates an invintation to organization. Only creator of organization allowed to invite users.',
     })
     @ApiDefaultBadRequestResponse()
-    @ApiDefaultNotFoundResponse('Organization not found!')
+    @ApiDefaultNotFoundResponse([
+        'Organization not found!',
+        'User not found!',
+    ])
     @HttpCode(HttpStatus.CREATED)
+    @UseGuards(OrganizationGuard)
     @Authorized()
-    @Post('invites')
-    invite(@Body() body: InviteToOrganizationDto, @RequestUser() user: JwtPayloadDto) {
-        return this.organizationsService.inviteToOrganization(user._id, body.user, body.organization);
+    @Put('invites')
+    invite(
+        @Body() body: InviteToOrganizationDto,
+        @RequestUser() user: JwtPayloadDto,
+        @SelectedOrganization() organization: ObjectId,
+    ) {
+        return this.organizationsService.inviteToOrganization(user._id, body.user, organization);
     }
 
     @ApiResponse({
@@ -108,11 +125,24 @@ export class OrganizationsController {
     })
     @ApiDefaultBadRequestResponse()
     @ApiDefaultNotFoundResponse('Invitation not found or was rejected or accepted!')
-    @HttpCode(HttpStatus.NO_CONTENT)
+    @HttpCode(HttpStatus.OK)
     @Authorized()
+    @UseInterceptors(new UpdateJwtResponseInterceptor())
     @Post('accept-invite')
     acceptInvite(@Body() body: AcceptInviteDto, @RequestUser() user: JwtPayloadDto) {
         return this.organizationsService.acceptInvite(user._id, body.invitationId);
+    }
+
+    @ApiResponse({
+        description: 'Declines invitation to organization.',
+    })
+    @ApiDefaultBadRequestResponse()
+    @ApiDefaultNotFoundResponse('Invitation not found or was rejected or accepted!')
+    @HttpCode(HttpStatus.OK)
+    @Authorized()
+    @Post('decline-invite')
+    declineInvite(@Body() body: AcceptInviteDto, @RequestUser() user: JwtPayloadDto) {
+        return this.organizationsService.declineInvite(user._id, body.invitationId);
     }
 
     @ApiResponse({
@@ -138,10 +168,15 @@ export class OrganizationsController {
     @ApiDefaultBadRequestResponse()
     @ApiDefaultNotFoundResponse('Organization not found!')
     @HttpCode(HttpStatus.NO_CONTENT)
+    @UseGuards(OrganizationGuard)
     @Authorized()
     @Delete('kick')
-    kick(@Body() body: KickFromOrganizationDto, @RequestUser() user: JwtPayloadDto) {
-        return this.organizationsService.kickFromOrganization(user._id, body.user, body.organization);
+    kick(
+        @Body() body: KickFromOrganizationDto,
+        @RequestUser() user: JwtPayloadDto,
+        @SelectedOrganization() organization: ObjectId,
+    ) {
+        return this.organizationsService.kickFromOrganization(user._id, body.user, organization);
     }
 
     @ApiResponse({
@@ -150,9 +185,82 @@ export class OrganizationsController {
     @ApiDefaultBadRequestResponse()
     @ApiDefaultNotFoundResponse('Organization not found!')
     @HttpCode(HttpStatus.NO_CONTENT)
+    @UseGuards(OrganizationGuard)
     @Authorized()
     @Delete('leave')
-    leave(@Body() body: LeaveFromOrganizationDto, @RequestUser() user: JwtPayloadDto) {
-        return this.organizationsService.leaveFromOrganization(user._id, body.organization);
+    leave(@RequestUser() user: JwtPayloadDto, @SelectedOrganization() organization: ObjectId) {
+        return this.organizationsService.leaveFromOrganization(user._id, organization);
+    }
+
+    @ApiResponse({
+        properties: {
+            type: 'object',
+            $ref: getSchemaPath(Organization),
+        } as SchemaObject,
+        description: 'Updates a organization.',
+    })
+    @ApiDefaultBadRequestResponse()
+    @HttpCode(HttpStatus.OK)
+    @UseGuards(OrganizationGuard)
+    @Authorized()
+    @Patch()
+    update(
+        @Body() update: UpdateOrganizationDto,
+        @RequestUser() user: JwtPayloadDto,
+        @SelectedOrganization() organization: ObjectId,
+    ) {
+        return this.organizationsService.update(user._id, organization, update);
+    }
+
+    @ApiResponse({
+        description: 'Selects organization',
+    })
+    @HttpCode(HttpStatus.NO_CONTENT)
+    @Authorized()
+    @Get('/:organization/select')
+    select(@Res() res: Response, @Param(validationPipe) { organization }: SelectOrganizationDto, @RequestUser() user: JwtPayloadDto) {
+        if (!organization) {
+            return res
+                .clearCookie('selectedOrganization')
+                .status(HttpStatus.NO_CONTENT)
+                .send();
+        }
+
+        if (!user.organizations.map((id) => id.toString()).includes(organization as string)) {
+            throw new ForbiddenException('You are not a member of this organization!');
+        }
+
+        return res
+            .cookie('selectedOrganization', organization)
+            .status(HttpStatus.NO_CONTENT)
+            .send();
+    }
+
+    @ApiResponse({
+        properties: {
+            type: 'string',
+        },
+        description: 'Generates invite token',
+    })
+    @ApiDefaultBadRequestResponse()
+    @ApiDefaultNotFoundResponse('Organization not found!')
+    @HttpCode(HttpStatus.OK)
+    @UseGuards(OrganizationGuard)
+    @Authorized()
+    @Patch('invite-token')
+    generateInviteToken(@RequestUser() user: JwtPayloadDto, @SelectedOrganization() organization: ObjectId) {
+        return this.organizationsService.generateInviteToken(user._id, organization);
+    }
+
+    @ApiResponse({
+        description: 'Joins to organization via token.',
+    })
+    @ApiDefaultBadRequestResponse()
+    @HttpCode(HttpStatus.OK)
+    @Authorized()
+    @UseInterceptors(new UpdateJwtResponseInterceptor())
+    @Patch('join')
+    join(@Body() { token }: JoinDto, @RequestUser() user: JwtPayloadDto) {
+        return this.organizationsService.joinOrganization(user._id, token);
     }
 }

@@ -10,7 +10,7 @@ import { organizationsConstants } from '../organizations.constants';
     collection: organizationsConstants.models.organizations,
 })
 export class Organization {
-    @Prop({ required: true, unique: true })
+    @Prop({ required: true })
     title: string;
 
     @Prop({ default: '' })
@@ -18,6 +18,15 @@ export class Organization {
 
     @Prop({ ref: userConstants.models.users, required: true })
     creatorId: ObjectId;
+
+    @Prop({ minlength: organizationsConstants.invites.tokenLength, maxlength: organizationsConstants.invites.tokenLength })
+    inviteToken: string;
+
+    @Prop({ default: null })
+    tokenGeneratedAt: Date;
+
+    @Prop({ default: false })
+    deleted: boolean;
 }
 
 export type OrganizationEntity = Organization & Document;

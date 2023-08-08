@@ -8,8 +8,6 @@ import { OrganizationsService } from './organizations.service';
 import { OrganizationInviteSchema } from './schemas/organization-invite.schema';
 import { OrganizationSchema } from './schemas/organizations.schema';
 import { OrganizationInviteRepository } from './repositories/organization-invite.repository';
-import { OrganizationDeleteLogSchema } from './schemas/organization-delete-log.schema';
-import { OrganizationDeleteLogRepository } from './repositories/organization-delete-log.repository';
 
 @Module({
     imports: [
@@ -24,15 +22,11 @@ import { OrganizationDeleteLogRepository } from './repositories/organization-del
                 collection: organizationsConstants.models.organizationInvite,
                 schema: OrganizationInviteSchema,
             },
-            {
-                name: organizationsConstants.models.organizationDeleteLog,
-                collection: organizationsConstants.models.organizationDeleteLog,
-                schema: OrganizationDeleteLogSchema,
-            },
         ]),
         UsersModule,
     ],
     controllers: [OrganizationsController],
-    providers: [OrganizationsService, OrganizationsRepository, OrganizationInviteRepository, OrganizationDeleteLogRepository],
+    providers: [OrganizationsService, OrganizationsRepository, OrganizationInviteRepository],
+    exports: [OrganizationsRepository],
 })
 export class OrganizationsModule {}

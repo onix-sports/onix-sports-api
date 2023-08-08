@@ -1,6 +1,7 @@
 import { LeaderboardEntity } from '@components/v1/common/dto/leaderboard-entity.interface';
 import { StatisticsService } from '@components/v1/statistics/services/statistics.service';
 import { Injectable } from '@nestjs/common';
+import { ObjectId } from 'mongodb';
 
 const firstSeasson = new Date(2021, 9, 1);
 @Injectable()
@@ -29,7 +30,7 @@ export class SeassonsService {
         }));
     }
 
-    async getSeassons() {
+    async getSeassons(organization: ObjectId) {
         const promises = [];
         let i = 0;
 
@@ -40,7 +41,7 @@ export class SeassonsService {
             if (dateTo.valueOf() > Date.now()) break;
 
             promises.push(
-                this.statisticsService.getLeaderboard(dateFrom, dateTo),
+                this.statisticsService.getLeaderboard(organization, dateFrom, dateTo),
             );
 
             i += 1;

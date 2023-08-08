@@ -1,7 +1,9 @@
 import { toObjectIds } from '@components/v1/common/transforms/to-object-ids.transform';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform, Type } from 'class-transformer';
-import { IsArray, IsDate, IsOptional } from 'class-validator';
+import {
+    IsArray, IsDate, IsOptional,
+} from 'class-validator';
 import { ObjectId } from 'mongodb';
 
 export class GetStatsDto {

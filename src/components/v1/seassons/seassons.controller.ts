@@ -1,10 +1,12 @@
 import { ApiResponse } from '@decorators/api-response.decorator';
 import {
-    Controller, Get, HttpCode, HttpStatus,
+    Controller, Get, HttpCode, HttpStatus, Query,
 } from '@nestjs/common';
 import { ApiExtraModels, ApiTags, getSchemaPath } from '@nestjs/swagger';
 import { LeaderboardEntity } from '@components/v1/common/dto/leaderboard-entity.interface';
+import validationPipe from '@pipes/validation.pipe';
 import { SeassonsService } from './seassons.service';
+import { GetSeassonsDto } from './dto/get-seassons.dto';
 
 @ApiTags('Seasons')
 @ApiExtraModels(LeaderboardEntity)
@@ -50,7 +52,7 @@ export class SeassonsController {
     })
     @HttpCode(HttpStatus.OK)
     @Get()
-    public getSeassons() {
-        return this.seassonsService.getSeassons();
+    public getSeassons(@Query(validationPipe) { organization }: GetSeassonsDto) {
+        return this.seassonsService.getSeassons(organization);
     }
 }

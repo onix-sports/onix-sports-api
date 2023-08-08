@@ -34,31 +34,35 @@ export class GameProcessService {
         return game;
     }
 
-    public async start(id: ObjectId) {
+    public async start(user: ObjectId, id: ObjectId) {
         const {
             players,
             title,
-            status,
             tournament,
+            organization,
+            moderator,
         } = await this.gameRepository.getGameInfo(id);
+        const startedGame: Game | null = await this.getGame(id).catch(() => null);
 
-        if (status !== GameStatus.DRAFT) throw new BadRequestException('Game is already finished or started!');
+        if (startedGame && startedGame.info().status !== GameStatus.DRAFT) throw new BadRequestException('Game is already finished or started!');
 
         const game: Game = new Game({
             id,
             players: Game.wrapPlayers(players as any as UserEntity[]),
             title,
             tournament,
-        }).start();
+            organization,
+            moderator,
+        }).start(user);
 
         await this.gameRepository.save(id, game);
     }
 
-    public async finish(id: ObjectId) {
+    public async finish(user: ObjectId, id: ObjectId) {
         const game: Game = await this.getGame(id);
 
         const info = game
-            .finish()
+            .finish(user)
             .info();
 
         await this.gameRepository.save(id, game);
@@ -66,11 +70,11 @@ export class GameProcessService {
         return info;
     }
 
-    public async goal(id: ObjectId, playerId: ObjectId, enemyId: ObjectId) {
+    public async goal(user: ObjectId, id: ObjectId, playerId: ObjectId, enemyId: ObjectId) {
         const game: Game = await this.getGame(id);
 
         const info = game
-            .goal(playerId, enemyId)
+            .goal(user, playerId, enemyId)
             .info();
 
         await this.gameRepository.save(id, game);
@@ -84,13 +88,13 @@ export class GameProcessService {
         return game.info();
     }
 
-    public async pause(id: ObjectId) {
+    public async pause(user: ObjectId, id: ObjectId) {
         const game = await this.getGame(id);
 
         if (game.info().status === GameStatus.PAUSED) {
-            game.unpause();
+            game.unpause(user);
         } else if (game.info().status !== GameStatus.DRAFT) {
-            game.pause();
+            game.pause(user);
         }
 
         await this.gameRepository.save(id, game);
@@ -98,11 +102,11 @@ export class GameProcessService {
         return game.info();
     }
 
-    public async swap(id: ObjectId, playerId: ObjectId) {
+    public async swap(user: ObjectId, id: ObjectId, playerId: ObjectId) {
         const game: Game = await this.getGame(id);
 
         const info = game
-            .swap(playerId)
+            .swap(user, playerId)
             .info();
 
         await this.gameRepository.save(id, game);
@@ -110,11 +114,11 @@ export class GameProcessService {
         return info;
     }
 
-    public async cancel(id: ObjectId, actionId: ObjectId) {
+    public async cancel(user: ObjectId, id: ObjectId, actionId: ObjectId) {
         const game = await this.getGame(id);
 
         const info = game
-            .cancel(actionId)
+            .cancel(user, actionId)
             .info();
 
         await this.gameRepository.save(id, game);
